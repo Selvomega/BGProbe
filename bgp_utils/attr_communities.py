@@ -1,5 +1,5 @@
-from attr_base import PathAttributeType, BaseAttr
-from binary_utils import * 
+from binary_utils.utils import * 
+from .attr_base import PathAttributeType, BaseAttr
 from enum import Enum
 
 # To Check: See if a community with invalid length (NOT 4 bytes) can be tolerated. 

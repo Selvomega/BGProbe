@@ -2,7 +2,7 @@
 BGP KEEPALIVE message.
 """
 
-from msg_base import MessageContent, MessageType
+from .msg_base import MessageContent, MessageType
 
 class KeepAliveMessage(MessageContent):
     """

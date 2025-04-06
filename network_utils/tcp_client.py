@@ -11,12 +11,17 @@ class TCPClient:
         self.socket = None
         self.connected = False
 
-    def start(self):
+    def start(self, bind_val=None):
         """
         Initialize and connect the TCP client
+        You can choose the ip address and port to bind to via `bind_val`
+        if `bind_val` is by default set to `None`, binding will not be performed
+        and the system will assign a random IP and port for the socket.
         """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if bind_val is not None:
+                self.socket.bind(bind_val)
             self.socket.connect((self.host, self.port))
             self.connected = True
             print(f"Connected to {self.host}:{self.port}")

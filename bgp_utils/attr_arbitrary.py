@@ -1,4 +1,4 @@
-from attr_base import BaseAttr
+from .attr_base import BaseAttr
 
 class ArbitraryAttr(BaseAttr):
     """

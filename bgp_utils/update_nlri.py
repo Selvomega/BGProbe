@@ -2,7 +2,7 @@
 The network layer reachability information (NLRI) element of UPDATE message.
 """
 
-from basic_types import IPPrefix, BinaryField
+from .basic_types import IPPrefix, BinaryField
 
 class NLRI(list[IPPrefix], BinaryField):
     """

@@ -1,7 +1,7 @@
 from enum import Enum
-from binary_utils import *
+from binary_utils.utils import *
 
-from basic_types import BinaryField
+from .basic_types import BinaryField
 
 class PathAttributeType(Enum):
     """

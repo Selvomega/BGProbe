@@ -1,7 +1,7 @@
 from enum import Enum
-from basic_types import BinaryField, abstractmethod
-from bgp_global_var import *
-from binary_utils import *
+from binary_utils.utils import *
+from .basic_types import BinaryField, abstractmethod
+from .bgp_global_var import *
 
 class MessageType(Enum):
     """

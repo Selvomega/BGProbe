@@ -2,11 +2,11 @@
 BGP UPDATE message.
 """
 
-from msg_base import MessageContent, MessageType
-from update_attr import PathAttributes
-from update_nlri import NLRI
-from update_wroutes import WithdrawnRoutes
-from binary_utils import *
+from binary_utils.utils import *
+from .msg_base import MessageContent, MessageType
+from .update_attr import PathAttributes
+from .update_nlri import NLRI
+from .update_wroutes import WithdrawnRoutes
 
 class UpdateMessage(MessageContent):
     """

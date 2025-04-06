@@ -1,6 +1,6 @@
-from attr_base import PathAttributeType, BaseAttr
-from binary_utils import * 
-from basic_types import *
+from binary_utils.utils import * 
+from .attr_base import PathAttributeType, BaseAttr
+from .basic_types import *
 
 # TODO: How to deal with the length of expression of IP addresses?
 class NextHopAttr(BaseAttr):
