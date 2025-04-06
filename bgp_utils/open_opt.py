@@ -2,8 +2,8 @@
 The optional parameter element of UPDATE message.
 """
 
-from basic_types import BinaryField
-from binary_utils import *
+from binary_utils.utils import *
+from .basic_types import BinaryField
 from enum import Enum
 
 class OptionalType(Enum):

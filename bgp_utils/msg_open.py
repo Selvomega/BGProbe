@@ -2,10 +2,10 @@
 BGP OPEN message.
 """
 
-from msg_base import MessageContent, MessageType
-from open_opt import OptionalParameters
-from basic_types import IP
-from bgp_global_var import BGP_VERSION, HOLD_TIME
+from .msg_base import MessageContent, MessageType
+from .open_opt import OptionalParameters
+from .basic_types import IP
+from .bgp_global_var import BGP_VERSION, HOLD_TIME
 
 class OpenMessage(MessageContent):
     """

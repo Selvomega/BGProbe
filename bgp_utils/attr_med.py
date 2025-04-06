@@ -1,5 +1,5 @@
-from attr_base import PathAttributeType, BaseAttr
-from binary_utils import * 
+from binary_utils.utils import * 
+from .attr_base import PathAttributeType, BaseAttr
 
 class MultiExitDiscAttr(BaseAttr):
     """

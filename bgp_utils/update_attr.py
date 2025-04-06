@@ -2,15 +2,15 @@
 The path attribute element of UPDATE message.
 """
 
-from basic_types import BinaryField
-from attr_base import BaseAttr
+from .basic_types import BinaryField
+from .attr_base import BaseAttr
 
-# from attr_aspath import *
-# from attr_communities import *
-# from attr_locpref import *
-# from attr_med import *
-# from attr_nexthop import *
-# from attr_origin import *
+# from .attr_aspath import *
+# from .attr_communities import *
+# from .attr_locpref import *
+# from .attr_med import *
+# from .attr_nexthop import *
+# from .attr_origin import *
 
 class PathAttributes(list[BaseAttr], BinaryField):
     """

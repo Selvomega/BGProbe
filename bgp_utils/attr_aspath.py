@@ -1,6 +1,6 @@
-from attr_base import PathAttributeType, BaseAttr
-from binary_utils import * 
-from basic_types import *
+from binary_utils.utils import * 
+from .attr_base import PathAttributeType, BaseAttr
+from .basic_types import *
 from enum import Enum
 
 class PathSegementType(Enum):

@@ -2,7 +2,7 @@
 The withdrawn routes element of UPDATE message.
 """
 
-from basic_types import IPPrefix, BinaryField
+from .basic_types import IPPrefix, BinaryField
 
 class WithdrawnRoutes(list[IPPrefix], BinaryField):
     """
