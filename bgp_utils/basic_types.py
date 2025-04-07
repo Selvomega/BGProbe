@@ -56,6 +56,12 @@ class IP:
             self.value = str(ipaddress.IPv4Address(ip_addr).exploded)
             self.segments = list(map(int, self.value.split('.')))
             assert len(self.segments)==4
+    
+    def get_str_expression(self):
+        """
+        Get the string expression of the IP address.
+        """
+        return self.value
 
 class IPPrefix:
     """
@@ -64,11 +70,11 @@ class IPPrefix:
     def __init__(self, prefix:str):
         assert('/' in prefix)
         original_addr, prefix_length = prefix.split('/')
-        self.prefix_length = int(prefix_length)
-        self.address = IP(original_addr)
-        self.type = self.address.type
+        self.prefix_length : int = int(prefix_length)
+        self.address : IP = IP(original_addr)
+        self.type : IPType = self.address.type
         prefix_segment_len = 16 if self.type==IPType.IPV6 else 8
-        self.prefix_segment_num = (self.prefix_length+prefix_segment_len-1) // prefix_segment_len
+        self.prefix_segment_num : int = (self.prefix_length+prefix_segment_len-1) // prefix_segment_len
         # prefix segments are the rounded segments exactly covering the prefix
         self.prefix_segments = self.address.segments[:self.prefix_segment_num].copy()
 
@@ -79,6 +85,14 @@ class IPPrefix:
         Get the binary expression of the IP prefix. 
         """
         return num2bytes(self.prefix_length,1) + b''.join(num2bytes(segment,1) for segment in self.prefix_segments)
+
+    def get_str_expression(self):
+        """
+        Get the string expression of the IP prefix.
+        """
+        if self.type == IPType.IPV6:
+            raise NotImplementedError("`get_str_expression` for IPv6 address has not been implemented!")
+        return f"{self.address.get_str_expression()}/{self.prefix_length}"
 
 class IPList(list[IP]):
     """

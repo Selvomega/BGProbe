@@ -19,7 +19,7 @@ class Neighbor:
     The dataclass defining the properties of a BGP neighbor
     """
     peer_ip : IP
-    asn : int
+    peer_asn : int
 
 class BGPConfiguration:
     """
@@ -35,43 +35,59 @@ class BGPConfiguration:
         """
         Initialize the BGP configuration
         """
-        self.asn = asn
-        self.router_id = router_id
-        self.local_prefixes = local_prefixes
-        self.neighbors = neighbors
+        self.asn : int = asn
+        self.router_id : IP = router_id
+        self.local_prefixes : list[IPPrefix] = local_prefixes
+        self.neighbors : list[Neighbor] = neighbors
 
     def append_local_prefix(self, prefix: IPPrefix):
         """
         Append a local prefix for the BGP instance.
+        return True if you can make some modification
+        return False if no modification should be made
         """
-        if prefix not in self.local_prefixes:
+        modify  = prefix not in self.local_prefixes
+        if modify:
             self.local_prefixes.append(prefix)
         else:
             print(f"Prefix {prefix} already in the configuration.")
+        return modify
 
     def remove_local_prefix(self, prefix: IPPrefix):
         """
         Remove a local prefix from the BGP instance.
+        return True if you can make some modification
+        return False if no modification should be made
         """
-        if prefix in self.local_prefixes:
+        modify = prefix in self.local_prefixes
+        if modify:
             self.local_prefixes.remove(prefix)
         else:
             print(f"Prefix {prefix} not in the configuration.")
+        return modify
 
     def append_neighbor(self, neighbor: Neighbor):
         """
         Append a neighbor for the BGP instance.
+        return True if you can make some modification
+        return False if no modification should be made
         """
-        if neighbor not in self.neighbors:
+        modify = neighbor not in self.neighbors
+        if modify:
             self.neighbors.append(neighbor)
         else:
             print(f"BGP neighbor {neighbor} already in the configuration.")
+        return modify
 
     def remove_neighbor(self, neighbor: Neighbor):
         """
         Remove a neighbor from the BGP instance.
+        return True if you can make some modification
+        return False if no modification should be made
         """
-        if neighbor in self.neighbors:
+        modify = neighbor in self.neighbors
+        if modify:
             self.neighbors.remove(neighbor)
         else:
             print(f"BGP neighbor {neighbor} not in the configuration.")
+        return neighbor in self.neighbors

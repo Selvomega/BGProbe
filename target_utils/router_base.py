@@ -12,7 +12,7 @@ class BaseRouter(ABC):
     @abstractmethod
     def __init__(self, configuration : BGPConfiguration):
         """
-        Remove the 
+        Initialize the BGP router. 
         """
         self.software_type : SoftwareType = None
         self.bgp_configuration : BGPConfiguration = configuration
@@ -22,21 +22,21 @@ class BaseRouter(ABC):
         """
         Start the BGP instance using `self.bgp_configuration` 
         """
-        pass
+        raise NotImplementedError("`start_bgp_instance` not implemented!")
 
     @abstractmethod
     def end_bgp_instance(self):
         """
         Shut down the BGP instance
         """
-        pass
+        raise NotImplementedError("`end_bgp_instance` not implemented!")
 
     @abstractmethod
     def restart_bgp_instance(self):
         """
         Restart the BGP instance.
         """
-        pass
+        raise NotImplementedError("`restart_bgp_instance` not implemented!")
 
     @abstractmethod
     def append_local_prefix(self, prefix: IPPrefix):
@@ -45,7 +45,7 @@ class BaseRouter(ABC):
         The base class will append the prefix to the configuration.
         You should call `super().append_local_prefix(prefix)`.
         """
-        self.bgp_configuration.append_local_prefix(prefix)
+        return self.bgp_configuration.append_local_prefix(prefix)
 
     @abstractmethod
     def remove_local_prefix(self, prefix: IPPrefix):
@@ -54,7 +54,7 @@ class BaseRouter(ABC):
         The base class will remove the prefix to the configuration.
         You should call `super().remove_local_prefix(prefix)`.
         """
-        self.bgp_configuration.remove_local_prefix(prefix)
+        return self.bgp_configuration.remove_local_prefix(prefix)
 
     @abstractmethod
     def append_neighbor(self, neighbor: Neighbor):
@@ -63,19 +63,20 @@ class BaseRouter(ABC):
         The base class will append the prefix to the configuration.
         You should call `super().append_neighbor(neighbor)`.
         """
-        self.bgp_configuration.append_neighbor(neighbor)
+        return self.bgp_configuration.append_neighbor(neighbor)
 
     @abstractmethod
     def remove_neighbor(self, neighbor: Neighbor):
         """
-        Reove a neighbor to the router.
+        Reove a neighbor from the router.
         The base class will remove the prefix to the configuration.
         You should call `super().remove_neighbor(neighbor)`.
         """
-        self.bgp_configuration.remove_neighbor(neighbor)
+        return self.bgp_configuration.remove_neighbor(neighbor)
 
     def get_software_type(self):
         """
         Get the type of the software
         """
         return self.software_type
+
