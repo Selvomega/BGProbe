@@ -5,7 +5,7 @@ This file defines some basic types of BGP implementation.
 from enum import Enum
 from abc import ABC, abstractmethod
 import ipaddress
-from binary_utils.utils import *
+from data_utils.binary_utils import *
 
 # TODO: Change this into all 
 # TODO: Use `BinaryField` to unify all BGP fields. (Do we need that?)

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from bgp_utils.basic_types import IP, IPPrefix
 from enum import Enum
 
-class SoftwareType(Enum):
+class RouterSoftwareType(Enum):
     """
     The type of routing software
     """
@@ -21,7 +21,7 @@ class Neighbor:
     peer_ip : IP
     peer_asn : int
 
-class BGPConfiguration:
+class RouterConfiguration:
     """
     This class is used to configure the BGP instance.
     We want this to be transparent to software type.

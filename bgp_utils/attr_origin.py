@@ -1,4 +1,4 @@
-from binary_utils.utils import * 
+from data_utils.binary_utils import * 
 from .attr_base import PathAttributeType, BaseAttr
 from enum import Enum
 

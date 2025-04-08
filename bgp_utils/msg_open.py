@@ -2,9 +2,10 @@
 BGP OPEN message.
 """
 
+from data_utils.binary_utils import *
 from .msg_base import MessageContent, MessageType
 from .open_opt import OptionalParameters
-from .basic_types import IP
+from .basic_types import IP, ip2bytes
 from .bgp_global_var import BGP_VERSION, HOLD_TIME
 
 class OpenMessage(MessageContent):
@@ -32,4 +33,14 @@ class OpenMessage(MessageContent):
         """
         Get the binary expression of the message. 
         """
-        return self.binary_content
+        return b''.join(
+            [
+                num2bytes(self.bgp_version,1),
+                num2bytes(self.asn,2),
+                num2bytes(self.hold_time,2),
+                ip2bytes(self.bgp_identifier),
+                num2bytes(self.optional_parameters.get_binary_length(),1),
+                self.optional_parameters.get_binary_expression()
+            ]
+        )
+        # return self.binary_content

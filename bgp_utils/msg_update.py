@@ -2,7 +2,7 @@
 BGP UPDATE message.
 """
 
-from binary_utils.utils import *
+from data_utils.binary_utils import *
 from .msg_base import MessageContent, MessageType
 from .update_attr import PathAttributes
 from .update_nlri import NLRI

@@ -2,7 +2,7 @@
 The optional parameter element of UPDATE message.
 """
 
-from binary_utils.utils import *
+from data_utils.binary_utils import *
 from .basic_types import BinaryField
 from enum import Enum
 

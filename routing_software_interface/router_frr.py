@@ -10,12 +10,12 @@ class FRRRouter(BaseRouter):
     The interface for FRR router.
     """
 
-    def __init__(self, configuration : BGPConfiguration):
+    def __init__(self, configuration : RouterConfiguration):
         """
         Initialize the BGP router. 
         """
-        self.software_type : SoftwareType = SoftwareType.FRR
-        self.bgp_configuration : BGPConfiguration = configuration
+        self.software_type : RouterSoftwareType = RouterSoftwareType.FRR
+        self.router_configuration : RouterConfiguration = configuration
     
     # This should be attached to the begining of the command you want to execute.
     FRR_CONFIG_TERMINAL = [
@@ -45,13 +45,13 @@ class FRRRouter(BaseRouter):
         modified_commands = [
             f"-c '{command}'" for command in commands
         ]
-        full_commands = FRRRouter.FRR_CONFIG_TERMINAL + [f"-c 'router bgp {self.bgp_configuration.asn}'"] + modified_commands
+        full_commands = FRRRouter.FRR_CONFIG_TERMINAL + [f"-c 'router bgp {self.router_configuration.asn}'"] + modified_commands
         single_command = " ".join(full_commands)
         os.system(single_command)
 
     def start_bgp_instance(self):
         """
-        Start the BGP instance using `self.bgp_configuration` 
+        Start the BGP instance using `self.router_configuration` 
         """
         config_debugging_info = [
             "debug bgp neighbor-events",
@@ -60,17 +60,17 @@ class FRRRouter(BaseRouter):
         ]
         config_router_info = [
             # Initialize the BGP speaker
-            f"router bgp {self.bgp_configuration.asn}",
+            f"router bgp {self.router_configuration.asn}",
             # Set the BGP router id
-            f"bgp router-id {self.bgp_configuration.router_id.value}"
+            f"bgp router-id {self.router_configuration.router_id.value}"
         ]
         config_local_prefix = [
             # initialize the network prefixes
-            f"network {prefix.get_str_expression()}" for prefix in self.bgp_configuration.local_prefixes
+            f"network {prefix.get_str_expression()}" for prefix in self.router_configuration.local_prefixes
         ]
         config_neighbor = [
             # initialize the BGP neighbors
-            f"neighbor {neighbor.peer_ip} remote-as {neighbor.peer_asn}" for neighbor in self.bgp_configuration.neighbors
+            f"neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}" for neighbor in self.router_configuration.neighbors
         ]
         commands = config_debugging_info + config_router_info + config_local_prefix + config_neighbor
         # execute the command
@@ -80,7 +80,7 @@ class FRRRouter(BaseRouter):
         """
         Shut down the BGP instance
         """
-        commands = [f"no bgp router {self.bgp_configuration.asn}"]
+        commands = [f"no router bgp {self.router_configuration.asn}"]
         # execute the command
         self.execute_commands_in_config_level(commands=commands)
 
@@ -131,7 +131,7 @@ class FRRRouter(BaseRouter):
         # Then make modification to the router instance
         if make_modification:
             commands = [
-                f"neighbor {neighbor.peer_ip} remote-as {neighbor.peer_asn}"
+                f"neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}"
             ]
             self.execute_commands_in_router_level(commands)
     
@@ -146,6 +146,6 @@ class FRRRouter(BaseRouter):
         # Then make modification to the router instance
         if make_modification:
             commands = [
-                f"no neighbor {neighbor.peer_ip} remote-as {neighbor.peer_asn}"
+                f"no neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}"
             ]
             self.execute_commands_in_router_level(commands)

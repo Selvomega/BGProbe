@@ -1,5 +1,5 @@
 from enum import Enum
-from binary_utils.utils import *
+from data_utils.binary_utils import *
 from .basic_types import BinaryField, abstractmethod
 from .bgp_global_var import *
 
@@ -34,12 +34,11 @@ class MessageContent(BinaryField):
         """
         pass
     
-    @abstractmethod
     def get_binary_length(self):
         """
         Get the length of message. 
         """
-        pass
+        return len(self.get_binary_expression())
 
     def get_message_type(self):
         """
@@ -47,7 +46,7 @@ class MessageContent(BinaryField):
         """
         return self.message_type
 
-class Message:
+class Message(BinaryField):
     """
     BGP message. 
     """
@@ -57,7 +56,8 @@ class Message:
         """
         self.header_marker = b'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
         self.message_type_b: bytes = num2bytes(message_content.get_message_type().value, 1)
-        self.message_len = message_content.get_len()
+        # TODO urgent: fix this!
+        self.message_len = message_content.get_binary_length()
         self.message_content: MessageContent = message_content
 
     def set_header_marker(self, self_defined:bytes):
@@ -109,3 +109,16 @@ class Message:
         Return the length of the message
         """
         return self.message_len
+
+    def get_binary_expression(self):
+        """
+        Get the binary expression of the message. 
+        """
+        return b''.join(
+            [
+                self.get_header_marker(),
+                num2bytes(self.get_message_length()+19,2),
+                num2bytes(self.get_message_type().value,1),
+                self.message_content.get_binary_expression()
+            ]
+        )

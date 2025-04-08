@@ -1,5 +1,5 @@
 from enum import Enum
-from binary_utils.utils import *
+from data_utils.binary_utils import *
 
 from .basic_types import BinaryField
 
