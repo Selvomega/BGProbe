@@ -5,8 +5,9 @@ This file defines the agent used by the test.
 from types import FunctionType
 from data_utils.serialize_utils import save_variable_to_file
 from bgp_utils.bgp_client_configuration import BGPClientConfiguration
+from bgp_utils.msg_base import MessageType
 from network_utils.tcp_client import TCPClient, TCPClientConfiguration
-from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType, Neighbor
+from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType
 from routing_software_interface.router_frr import FRRRouter
 from .test_suite import TestSuite, TestCaseArchive
 
@@ -36,11 +37,6 @@ class TestAgent:
         self.check_func : FunctionType = check_func
         self.dump_path : str = dump_path
 
-        # Add the test agent to the router of the software router to be tested
-        neighbor = Neighbor(peer_ip=self.bgp_client_config.ip_addr, 
-                            peer_asn=self.bgp_client_config.asn)
-        self.router_config.append_neighbor(neighbor=neighbor)
-
         # Initialize the clients
         self.tcp_client = TCPClient(self.tcp_client_config)
         match self.router_type:
@@ -61,6 +57,9 @@ class TestAgent:
             # Send the message one-by-one
             for message in testcase:
                 self.tcp_client.send(message.get_binary_expression())
+                if message.get_message_type() in [MessageType.OPEN, MessageType.KEEPALIVE]:
+                    # Receive the exchanged message for 
+                    received = self.tcp_client.receive()
                 # TODO: deal with connection ending here
                 if self.check_func():
                     # if the testcase is satisfying
@@ -72,5 +71,7 @@ class TestAgent:
                     break
 
             # End of iteration, shut down the routing software and the TCP client.
+            from time import sleep
+            sleep(10)
             self.router_interface.end_bgp_instance()
             self.tcp_client.end()

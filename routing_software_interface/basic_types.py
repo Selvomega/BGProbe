@@ -20,6 +20,8 @@ class Neighbor:
     """
     peer_ip : IP
     peer_asn : int
+    # local source used for communication
+    local_source : str
 
 class RouterConfiguration:
     """

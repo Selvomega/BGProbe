@@ -56,6 +56,7 @@ class FRRRouter(BaseRouter):
         config_debugging_info = [
             "debug bgp neighbor-events",
             "debug bgp updates",
+            "debug bgp keepalives",
             "debug bgp nht"
         ]
         config_router_info = [
@@ -70,7 +71,10 @@ class FRRRouter(BaseRouter):
         ]
         config_neighbor = [
             # initialize the BGP neighbors
-            f"neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}" for neighbor in self.router_configuration.neighbors
+            command for neighbor in self.router_configuration.neighbors for command in [
+                f"neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}",
+                f"neighbor {neighbor.peer_ip.get_str_expression()} update-source {neighbor.local_source}"
+            ]
         ]
         commands = config_debugging_info + config_router_info + config_local_prefix + config_neighbor
         # execute the command
@@ -131,7 +135,10 @@ class FRRRouter(BaseRouter):
         # Then make modification to the router instance
         if make_modification:
             commands = [
-                f"neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}"
+                command for neighbor in self.router_configuration.neighbors for command in [
+                    f"neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}",
+                    f"neighbor {neighbor.peer_ip.get_str_expression()} update-source {neighbor.local_source}"
+                ]
             ]
             self.execute_commands_in_router_level(commands)
     
