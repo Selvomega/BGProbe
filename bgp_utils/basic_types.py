@@ -46,6 +46,7 @@ class IP:
     IP address
     """
     def __init__(self, ip_addr:str):
+        ip_addr = ip_addr.split('/')[0]
         if ':' in ip_addr:
             self.type = IPType.IPV6
             self.value = str(ipaddress.IPv6Address(ip_addr).exploded)

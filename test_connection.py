@@ -15,9 +15,10 @@ from network_utils.tcp_client import TCPClientConfiguration, TCPClient
 from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType
 
 client_config = TCPClientConfiguration(
-    '127.0.0.1',
+    '10.0.0.127',
     179,
-    ('127.0.0.2',0)
+    ('10.0.0.1',0),
+    "ns-cli1"
 )
 
 client = TCPClient(client_config)

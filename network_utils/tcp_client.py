@@ -1,5 +1,6 @@
-import socket
+import socket, os
 from dataclasses import dataclass
+from pyroute2 import netns
 
 @dataclass
 class TCPClientConfiguration:
@@ -12,6 +13,8 @@ class TCPClientConfiguration:
     port : int
     # address and port the client can bind to
     bind_val : tuple
+    # the name of the network namespace
+    netns: str = None
 
 class TCPClient:
     """
@@ -32,6 +35,12 @@ class TCPClient:
         and the system will assign a random IP and port for the socket.
         """
         try:
+            # Switch to network namespace if specified
+            if self.configuration.netns:
+                netns_fd = open(f"/var/run/netns/{self.configuration.netns}")
+                os.setns(netns_fd.fileno(), 0)
+                netns_fd.close()
+
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if self.configuration.bind_val is not None:
                 self.socket.bind(self.configuration.bind_val)

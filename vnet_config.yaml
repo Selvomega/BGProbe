@@ -1,7 +1,7 @@
 bridge: br0
 
-frr:
-  ip: 10.0.0.0/24
+router_software:
+  ip: 10.0.0.127/24
   veth: veth0
 
 clients:

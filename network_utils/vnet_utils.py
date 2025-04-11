@@ -12,7 +12,7 @@ def peer_name(name:str):
 
 def create_network_bridge(name: str):
     """Create a network bridge."""
-    return f'ip link add name {name} type bridge'
+    return f'sudo ip link add name {name} type bridge'
 
 def start_network_bridge(name: str):
     """Start the network bridge."""

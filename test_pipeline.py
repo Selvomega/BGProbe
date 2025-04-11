@@ -13,13 +13,21 @@ from bgp_utils.open_opt import OptionalParameters
 from network_utils.tcp_client import TCPClientConfiguration
 from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType, Neighbor
 
-asn = 65002
-bgp_identifier = IP('2.2.2.2')
-bgp_client_ip = IP('127.0.0.2')
+from vnet_config import VNET_CONFIG
+
+router = VNET_CONFIG["router_software"]
+client = VNET_CONFIG["clients"][0]
+
+router_asn = 65001
+client_asn = 65002
+
+client_bgp_identifier = IP(client["ip"])
+client_ip = IP(client["ip"])
+client_namespace = client["namespace"]
 
 open_message_content = OpenMessage(
-    asn=asn,
-    bgp_identifier=bgp_identifier,
+    asn=client_asn,
+    bgp_identifier=client_bgp_identifier,
     optional_parameters=OptionalParameters([])
 )
 keepalive_message_content = KeepAliveMessage()
@@ -37,19 +45,22 @@ def temp_func():
     """Boo..."""
     return False
 
-bgp_client_config = BGPClientConfiguration(asn, bgp_client_ip)
-tcp_client_config = TCPClientConfiguration(host='127.0.0.1',port=179,bind_val=('127.0.0.2', 0))
+bgp_client_config = BGPClientConfiguration(client_asn, client_ip)
+tcp_client_config = TCPClientConfiguration(host=IP(router["ip"]).get_str_expression(),
+                                           port=179,
+                                           bind_val=(client_ip.get_str_expression(), 0),
+                                           netns=client_namespace)
 router_config = RouterConfiguration(
-    asn=65001,
-    router_id=IP('1.1.1.1'),
+    asn=router_asn,
+    router_id=IP(router["ip"]),
     neighbors=[Neighbor(
-        peer_ip=IP('127.0.0.2'),
-        peer_asn=asn,
-        local_source='lo'
+        peer_ip=client_ip,
+        peer_asn=client_asn,
+        local_source=router["veth"]
     )],
-    local_prefixes=[
-        IPPrefix('192.0.2.0/24')
-    ]
+    # local_prefixes=[
+    #     IPPrefix('192.0.2.0/24')
+    # ]
 )
 
 test_agent = TestAgent(
