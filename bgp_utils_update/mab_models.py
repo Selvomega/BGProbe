@@ -2,6 +2,8 @@
 This file is for the multi-arm bandit model used for mutation. 
 """
 
+# TODO: Do we still need this file? 
+
 import numpy as np
 
 class NormalizedExponentialWeighting:
