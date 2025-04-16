@@ -39,6 +39,11 @@ class Length_BFN(BinaryFieldNode):
         # If the length should consider the length field itself.
         self.include_myself = include_myself
     
+    @classmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        return "Length_BFN"
+    
     ########## Get binary info ##########
 
     def get_binary_expression_inner(self):
@@ -115,6 +120,11 @@ class ASN_BFN(BinaryFieldNode):
 
         self.asn = asn
         self.asn_byte_len = asn_byte_len
+    
+    @classmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        return "ASN_BFN"
     
     ########## Get binary info ##########
 

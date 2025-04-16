@@ -50,6 +50,11 @@ class HeaderMarker_BFN(BinaryFieldNode):
         ###### special attributes ######
 
         # No special attributes
+    
+    @classmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        return "HeaderMarker_BFN"
 
     ########## Get binary info ##########
 
@@ -113,6 +118,11 @@ class MessageType_BFN(BinaryFieldNode):
 
         self.message_type = message_type
     
+    @classmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        return "MessageType_BFN"
+    
     ########## Get binary info ##########
 
     def get_binary_expression_inner(self):
@@ -164,7 +174,7 @@ class MessageType_BFN(BinaryFieldNode):
 
 MessageContent_BFN = BinaryFieldNode
 
-class BGPMessage(BinaryFieldNode):
+class BGPMessage_BFN(BinaryFieldNode):
     """
     BGP Message.
     The top level of BinaryFieldNode.
@@ -193,3 +203,8 @@ class BGPMessage(BinaryFieldNode):
         self.binary_content : bytes = None
         self.prefix : bytes = b''
         self.suffix : bytes = b''
+    
+    @classmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        return "BGPMessage_BFN"

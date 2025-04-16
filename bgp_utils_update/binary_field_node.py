@@ -4,11 +4,40 @@ from typing import Callable, Union, Any
 import random
 import numpy as np
 
+def smart_append(d: dict, key: str, val) -> str:
+    """
+    Smart append method.
+    Will check all the keys in the dictionary `d`, 
+    find all in the form of `key_*` (* is an integer no less than 0),
+    and find the smallest n such that `key_n` does not exist in `d`,
+    and finally append `(key_n, val)` to `d`.
+    Return "key_n". 
+    -----------------------------
+    Called in the append methods of BinaryFieldNode
+    """
+    # extract all numbers from keys look like `key_*`.
+    numbers = set()
+    for k in d.keys():
+        if k.startswith(key + "_"):
+            # Extract the number part. 
+            num = int(k.split("_")[-1])
+            numbers.add(num)
+    # Find the minimal usable number `n`.
+    n = 0
+    while n in numbers:
+        n += 1
+    # Insert the new key-value pair.
+    new_key = f"{key}_{n}"
+    d[new_key] = val
+    # Return the key
+    return new_key
+
 class BinaryFieldNode(ABC):
     """
     The basic type of binary field.
     Use "BFN" as a shorter representation. 
     """
+
     @abstractmethod
     def __init__(self):
         """
@@ -65,6 +94,12 @@ class BinaryFieldNode(ABC):
 
         ###### This function must be re-implemented ######
 
+        raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
         raise NotImplementedError()
 
     ########## Get binary info ##########
@@ -202,20 +237,22 @@ class BinaryFieldNode(ABC):
     ########## Manage relationships ##########
 
     def append_child(self, 
-                     child: "BinaryFieldNode",
-                     child_key: str):
+                     child: "BinaryFieldNode") -> str:
         """
         Append a child to `self.children`.
         Recall that the children must be ordered.
+        Return the key of the child. 
         """
-        if child_key in self.children:
-            print(f"Child key {child_key} has been used, please change one.")
-        self.children[child_key] = child
+        return smart_append(self.children,
+                            child.get_bfn_name(),
+                            child)
 
     def remove_child(self, child_key: str):
         """Remove a child with given key."""
         if child_key in self.children:
             self.children.pop(child_key)
+        else:
+            print(f"Child {child_key} does not exist!")
     
     def set_parent(self, parent: "BinaryFieldNode"):
         """
@@ -227,30 +264,38 @@ class BinaryFieldNode(ABC):
     ########## Manage dependencies ##########
 
     def append_dependency(self, 
-                          dependency: "BinaryFieldNode",
-                          dependency_key: str):
-        """Append a dependency to `self.dependencies`."""
-        if dependency_key in self.dependencies:
-            print(f"Dependency key {dependency_key} has been used, please change one.")
-        self.dependencies[dependency_key] = dependency
+                          dependency: "BinaryFieldNode") -> str:
+        """
+        Append a dependency to `self.dependencies`.
+        Return the key of the dependency.
+        """
+        return smart_append(self.dependencies,
+                            dependency.get_bfn_name(),
+                            dependency)
     
     def remove_dependency(self, dependency_key: str):
         """Remove a dependency with given key."""
         if dependency_key in self.dependencies:
             self.dependencies.pop(dependency_key)
+        else:
+            print(f"Dependency {dependency_key} does not exist!")
         
     def append_depend_on_me(self,
-                            depend_on_me: "BinaryFieldNode",
-                            depend_on_me_key: str):
-        """Append a depend-on-me to `self.depend_on_me`."""
-        if depend_on_me_key in self.dependencies:
-            print(f"Dependent-on-me key {depend_on_me_key} has been used, please change one.")
-        self.depend_on_me[depend_on_me_key] = depend_on_me
+                            depend_on_me: "BinaryFieldNode") -> str:
+        """
+        Append a depend-on-me to `self.depend_on_me`.
+        Return the key of the depend-on-me.
+        """
+        return smart_append(self.depend_on_me,
+                            depend_on_me.get_bfn_name(),
+                            depend_on_me)
 
     def remove_depend_on_me(self, depend_on_me_key: str):
         """Remove a depend-on-me with given key."""
         if depend_on_me_key in self.depend_on_me:
             self.depend_on_me.pop(depend_on_me_key)
+        else:
+            print(f"Depend-on-me {depend_on_me_key} does not exist!")
     
     def add_dependency_between_children(self,
                        dependent_key: str,
@@ -265,10 +310,8 @@ class BinaryFieldNode(ABC):
         if dependency_key not in self.children:
             print(f"Child {dependency_key} is not in the children of the BFN.") 
             return
-        self.children[dependent_key].append_dependency(self.children[dependency_key],
-                                                       dependency_key)
-        self.children[dependency_key].append_depend_on_me(self.children[dependent_key],
-                                                          dependent_key)
+        self.children[dependent_key].append_dependency(self.children[dependency_key])
+        self.children[dependency_key].append_depend_on_me(self.children[dependent_key])
     
     def remove_depencency(self,
                           dependent_key: str,
