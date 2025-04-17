@@ -215,8 +215,21 @@ class BinaryFieldNode(ABC):
             self.update_depend_on_me()
     
     def detach(self):
-        """Let the BFN detached from its dependencies."""
+        """
+        Let the BFN detached from its dependencies.
+        Call detach recursively. 
+        """
         self.detached = True
+        if self.parent is not None:
+            self.parent.detach()
+        
+    def detach_according_to_children(self):
+        """Detach if there is any children detached."""
+        for bfn in self.children.values():
+            if bfn.detached:
+                # If any children has detached
+                self.detach()
+                break
 
     def attach(self):
         """
@@ -243,6 +256,9 @@ class BinaryFieldNode(ABC):
         Recall that the children must be ordered.
         Return the key of the child. 
         """
+        # Set the parent of children.
+        child.set_parent(self)
+        # append the child to the child-dictionary.
         return smart_append(self.children,
                             child.get_bfn_name(),
                             child)

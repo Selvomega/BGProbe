@@ -181,21 +181,25 @@ class BGPMessage_BFN(BinaryFieldNode):
     This can be inherited by more specific message types. 
     """
     def __init__(self,
-                 header_marker_bfn: HeaderMarker_BFN,
-                 length_bfn: Length_BFN,
                  message_type_bfn: MessageType_BFN,
-                 message_content_bfn: MessageContent_BFN): 
+                 message_content_bfn: MessageContent_BFN,
+                 header_marker_bfn: HeaderMarker_BFN = HeaderMarker_BFN(),
+                 length_bfn: Length_BFN = Length_BFN(length_val=19,
+                                                     length_byte_len=2,
+                                                     include_myself=True),
+                 ): 
         """Initialize the BGP message."""
 
         ###### Basic attributes ######
-        
-        # `include_myself` have to be set True here
-        length_bfn.include_myself = True
 
-        self.children : dict[str,BinaryFieldNode] = {
-            "header_marker": header_marker_bfn,
-            # TODO
-        }
+        # Initialize the children. 
+        # The sequence is very important.
+        self.children : dict[str,BinaryFieldNode] = {}
+        header_marker_key = self.append_child(header_marker_bfn)
+        length_key = self.append_child(length_bfn)
+        message_type_key = self.append_child(message_type_bfn)
+        message_content_key = self.append_child(message_content_bfn)
+        # Parent can still be `None`. 
         self.parent : BinaryFieldNode = None
         self.dependencies = dict[str,BinaryFieldNode] = {}
         self.depend_on_me = dict[str,BinaryFieldNode] = {}
@@ -203,6 +207,28 @@ class BGPMessage_BFN(BinaryFieldNode):
         self.binary_content : bytes = None
         self.prefix : bytes = b''
         self.suffix : bytes = b''
+
+        # Initialize all weights to 1.
+        # IMPORTANT: use the `mutation_set` of current class!
+        self.weights = np.ones(len(BGPMessage_BFN.mutation_set))
+        # Normalize
+        self.weights /= np.sum(self.weights)
+        # Set the learning rate.
+        self.eta = 0.05
+
+        ###### special attributes ######
+
+        # No special attributes
+
+        ###### Add dependencies between childs ######
+        
+        self.children[length_key].include_myself = True
+        self.add_dependency_between_children(dependent_key=length_key,
+                                             dependency_key=header_marker_key)
+        self.add_dependency_between_children(dependent_key=length_key,
+                                             dependency_key=message_type_key)
+        self.add_dependency_between_children(dependent_key=length_key,
+                                             dependency_key=message_content_key)
     
     @classmethod
     def get_bfn_name() -> str:
