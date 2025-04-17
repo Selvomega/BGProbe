@@ -174,7 +174,7 @@ class MessageType_BFN(BinaryFieldNode):
 
 MessageContent_BFN = BinaryFieldNode
 
-class BGPMessage_BFN(BinaryFieldNode):
+class Message_BFN(BinaryFieldNode):
     """
     BGP Message.
     The top level of BinaryFieldNode.
@@ -192,14 +192,7 @@ class BGPMessage_BFN(BinaryFieldNode):
 
         ###### Basic attributes ######
 
-        # Initialize the children. 
-        # The sequence is very important.
         self.children : dict[str,BinaryFieldNode] = {}
-        header_marker_key = self.append_child(header_marker_bfn)
-        length_key = self.append_child(length_bfn)
-        message_type_key = self.append_child(message_type_bfn)
-        message_content_key = self.append_child(message_content_bfn)
-        # Parent can still be `None`. 
         self.parent : BinaryFieldNode = None
         self.dependencies = dict[str,BinaryFieldNode] = {}
         self.depend_on_me = dict[str,BinaryFieldNode] = {}
@@ -210,7 +203,7 @@ class BGPMessage_BFN(BinaryFieldNode):
 
         # Initialize all weights to 1.
         # IMPORTANT: use the `mutation_set` of current class!
-        self.weights = np.ones(len(BGPMessage_BFN.mutation_set))
+        self.weights = np.ones(len(Message_BFN.mutation_set))
         # Normalize
         self.weights /= np.sum(self.weights)
         # Set the learning rate.
@@ -220,17 +213,87 @@ class BGPMessage_BFN(BinaryFieldNode):
 
         # No special attributes
 
-        ###### Add dependencies between childs ######
-        
-        self.children[length_key].include_myself = True
-        self.add_dependency_between_children(dependent_key=length_key,
-                                             dependency_key=header_marker_key)
-        self.add_dependency_between_children(dependent_key=length_key,
-                                             dependency_key=message_type_key)
-        self.add_dependency_between_children(dependent_key=length_key,
-                                             dependency_key=message_content_key)
+        ###### Deal with relations with and between children ######
+
+        # Initialize the children. 
+        # The sequence is very important.
+        # Parents can still be `None`
+        self.header_marker_key = self.append_child(header_marker_bfn)
+        self.length_key = self.append_child(length_bfn)
+        self.message_type_key = self.append_child(message_type_bfn)
+        self.message_content_key = self.append_child(message_content_bfn)
+        # Update the detach state of the current BFN.
+        self.detach_according_to_children()
+        # Add dependencies between children
+        self.children[self.length_key].include_myself = True
+        self.add_dependency_between_children(dependent_key=self.length_key,
+                                             dependency_key=self.header_marker_key)
+        self.add_dependency_between_children(dependent_key=self.length_key,
+                                             dependency_key=self.message_type_key)
+        self.add_dependency_between_children(dependent_key=self.length_key,
+                                             dependency_key=self.message_content_key)
+        # Let children update
+        self.children_update()
     
     @classmethod
     def get_bfn_name() -> str:
         """Get the name of the BFN."""
         return "BGPMessage_BFN"
+
+    ########## Get binary info ##########
+
+    def get_binary_expression_inner(self):
+        """Get binary expression."""
+        # Concatenate the children's binary expressions.
+        return b''.join([
+            child.get_binary_expression() for child in self.children.values()
+        ])
+
+    ########## Update according to dependencies ##########
+    
+    def update_on_dependencies_inner(self):
+        """
+        Update the current BFN according to its dependencies.
+        This BFN do not have dependencies.
+        """
+        # You should not raise error because of `attach` function
+        return
+
+    ########## Methods for generating random mutation ##########
+
+    # No such methods, use methods from father class
+
+    ########## Methods for applying mutation ##########
+
+    @BinaryFieldNode.set_function_decorator
+    def set_length(self, length_val: int):
+        """
+        Set the length of the Message BFN.
+        """
+        self.children[self.length_key].set_length(length_val)
+
+    @BinaryFieldNode.set_function_decorator
+    def set_message_type(self, message_type: MessageType):
+        """
+        Set the message type of the Message BFN.
+        """
+        self.children[self.message_type_key].set_message_type(message_type)
+    
+    @BinaryFieldNode.set_function_decorator
+    def set_header_marker_bval(self, header_marker: bytes):
+        """
+        Set the header marker of the Message BFN.
+        """
+        self.children[self.header_marker_key].set_bval(header_marker)
+
+    @BinaryFieldNode.set_function_decorator
+    def set_message_content_bval(self, message_content: bytes):
+        """
+        Set the header marker of the Message BFN.
+        """
+        self.children[self.message_content_key].set_bval(message_content)
+    
+    ########## Method for selecting mutation ##########
+
+    # Overwrite the father class' mutation_set
+    mutation_set = BinaryFieldNode.mutation_set

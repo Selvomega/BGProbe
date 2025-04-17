@@ -213,6 +213,14 @@ class BinaryFieldNode(ABC):
         if updated:
             # You should recursively call the `update` functions 
             self.update_depend_on_me()
+        
+    def children_update(self):
+        """
+        Call `update` method for the children.
+        This should be called when initializing the children of a BFN
+        """
+        for bfn in self.children.values():
+            bfn.update()
     
     def detach(self):
         """
