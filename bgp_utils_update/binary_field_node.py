@@ -39,9 +39,11 @@ class BinaryFieldNode(ABC):
     """
 
     @abstractmethod
-    def __init__(self):
+    def __init__(self,
+                 eta = 0.05):
         """
         Initialize the function.
+        This function must be re-implemented and called in all __init__ methods of subclasses.
         """
 
         ###### For tree stucture ######
@@ -90,11 +92,7 @@ class BinaryFieldNode(ABC):
         # Normalize
         self.weights /= np.sum(self.weights)
         # Set the learning rate.
-        self.eta = 0.05
-
-        ###### This function must be re-implemented ######
-
-        raise NotImplementedError()
+        self.eta = eta
 
     @classmethod
     @abstractmethod

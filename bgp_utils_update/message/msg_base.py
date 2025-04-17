@@ -1,6 +1,6 @@
-from .binary_field_node import BinaryFieldNode
-from .basic_types import Length_BFN
-from data_utils.binary_utils import num2bytes
+from ..binary_field_node import BinaryFieldNode
+from ..basic_types import Length_BFN
+from data_utils.binary_utils import num2bytes, bytes2num
 from enum import Enum
 from functools import partial
 import random
@@ -30,22 +30,11 @@ class HeaderMarker_BFN(BinaryFieldNode):
         
         ###### Basic attributes ######
 
-        self.children : dict[str,BinaryFieldNode] = {}
-        self.parent : BinaryFieldNode = None
-        self.dependencies = dict[str,BinaryFieldNode] = {}
-        self.depend_on_me = dict[str,BinaryFieldNode] = {}
-        self.detached = False
-        self.binary_content : bytes = None
-        self.prefix : bytes = b''
-        self.suffix : bytes = b''
+        super().__init__()
 
-        # Initialize all weights to 1.
-        # IMPORTANT: use the `mutation_set` of current class!
+        ###### Set the weights ######
         self.weights = np.ones(len(HeaderMarker_BFN.mutation_set))
-        # Normalize
         self.weights /= np.sum(self.weights)
-        # Set the learning rate.
-        self.eta = 0.05
 
         ###### special attributes ######
 
@@ -74,11 +63,11 @@ class HeaderMarker_BFN(BinaryFieldNode):
 
     ########## Methods for generating random mutation ##########
 
-    # No such methods, use methods from father class
+    # Use methods from father class
 
     ########## Methods for applying mutation ##########
 
-    # No such methods, use methods from father class
+    # Use methods from father class
 
     ########## Method for selecting mutation ##########
 
@@ -92,27 +81,16 @@ class MessageType_BFN(BinaryFieldNode):
     def __init__(self,
                  message_type : MessageType = MessageType.UNDEFINED):
         """
-        Initialize the BGP message header marker BFN. 
+        Initialize the BGP message type BFN. 
         """
 
         ###### Basic attributes ######
 
-        self.children : dict[str,BinaryFieldNode] = {}
-        self.parent : BinaryFieldNode = None
-        self.dependencies = dict[str,BinaryFieldNode] = {}
-        self.depend_on_me = dict[str,BinaryFieldNode] = {}
-        self.detached = False
-        self.binary_content : bytes = None
-        self.prefix : bytes = b''
-        self.suffix : bytes = b''
+        super().__init__()
 
-        # Initialize all weights to 1.
-        # IMPORTANT: use the `mutation_set` of current class!
-        self.weights = np.ones(len(HeaderMarker_BFN.mutation_set))
-        # Normalize
+        ###### Set the weights ######
+        self.weights = np.ones(len(MessageType_BFN.mutation_set))
         self.weights /= np.sum(self.weights)
-        # Set the learning rate.
-        self.eta = 0.05
 
         ###### special attributes ######
 
@@ -141,7 +119,7 @@ class MessageType_BFN(BinaryFieldNode):
 
     ########## Methods for generating random mutation ##########
 
-    def random_message_type(self):
+    def random_message_type(self) -> MessageType:
         """
         Return a random message type.
         The returned value is guaranteed to be a message type.
@@ -159,6 +137,16 @@ class MessageType_BFN(BinaryFieldNode):
         Set the message type of current BFN.
         """
         self.message_type = message_type
+    
+    @BinaryFieldNode.set_function_decorator
+    def set_message_type_val(self, message_type_val: bytes):
+        """
+        Set the message type value of current BFN.
+        Will set the binary content directly.
+        But this is still not equivalent to the `set_bval` function,
+        because of the overwriting rules. 
+        """
+        self.binary_content = message_type_val
 
     ########## Method for selecting mutation ##########
 
@@ -168,15 +156,29 @@ class MessageType_BFN(BinaryFieldNode):
         BinaryFieldNode.MutationItem(
             partial(BinaryFieldNode.random_bval_fixed_len, 
                     length=1), 
-            BinaryFieldNode.set_bval
+            set_message_type_val
         )
     ]
 
 MessageContent_BFN = BinaryFieldNode
 
-class Message_BFN(BinaryFieldNode):
+# 0                   1                   2                   3
+# 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+# |                                                               |
+# +                                                               +
+# |                                                               |
+# +                                                               +
+# |                            Marker                             |
+# +                                                               +
+# |                                                               |
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+# |            Length            |      Type      |
+# +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+class BaseMessage_BFN(BinaryFieldNode):
     """
-    BGP Message.
+    BGP Base Message.
     The top level of BinaryFieldNode.
     This can be inherited by more specific message types. 
     """
@@ -192,22 +194,11 @@ class Message_BFN(BinaryFieldNode):
 
         ###### Basic attributes ######
 
-        self.children : dict[str,BinaryFieldNode] = {}
-        self.parent : BinaryFieldNode = None
-        self.dependencies = dict[str,BinaryFieldNode] = {}
-        self.depend_on_me = dict[str,BinaryFieldNode] = {}
-        self.detached = False
-        self.binary_content : bytes = None
-        self.prefix : bytes = b''
-        self.suffix : bytes = b''
+        super().__init__()
 
-        # Initialize all weights to 1.
-        # IMPORTANT: use the `mutation_set` of current class!
-        self.weights = np.ones(len(Message_BFN.mutation_set))
-        # Normalize
+        ###### Set the weights ######
+        self.weights = np.ones(len(BaseMessage_BFN.mutation_set))
         self.weights /= np.sum(self.weights)
-        # Set the learning rate.
-        self.eta = 0.05
 
         ###### special attributes ######
 
@@ -238,7 +229,7 @@ class Message_BFN(BinaryFieldNode):
     @classmethod
     def get_bfn_name() -> str:
         """Get the name of the BFN."""
-        return "BGPMessage_BFN"
+        return "BaseMessage_BFN"
 
     ########## Get binary info ##########
 
@@ -261,37 +252,40 @@ class Message_BFN(BinaryFieldNode):
 
     ########## Methods for generating random mutation ##########
 
-    # No such methods, use methods from father class
+    # Use methods from father class
 
     ########## Methods for applying mutation ##########
 
-    @BinaryFieldNode.set_function_decorator
+    # The following methods are recursively calling set-function of childrens, 
+    # so there is no need to use `set_function_decorator`
+
     def set_length(self, length_val: int):
         """
         Set the length of the Message BFN.
         """
-        self.children[self.length_key].set_length(length_val)
+        bfn : Length_BFN = self.children[self.length_key]
+        bfn.set_length(length_val)
 
-    @BinaryFieldNode.set_function_decorator
     def set_message_type(self, message_type: MessageType):
         """
         Set the message type of the Message BFN.
         """
-        self.children[self.message_type_key].set_message_type(message_type)
-    
-    @BinaryFieldNode.set_function_decorator
+        bfn: MessageType_BFN = self.children[self.message_type_key]
+        bfn.set_message_type(message_type)
+
     def set_header_marker_bval(self, header_marker: bytes):
         """
         Set the header marker of the Message BFN.
         """
-        self.children[self.header_marker_key].set_bval(header_marker)
+        bfn : HeaderMarker_BFN = self.children[self.header_marker_key]
+        bfn.set_bval(header_marker)
 
-    @BinaryFieldNode.set_function_decorator
     def set_message_content_bval(self, message_content: bytes):
         """
         Set the header marker of the Message BFN.
         """
-        self.children[self.message_content_key].set_bval(message_content)
+        bfn : MessageContent_BFN = self.children[self.message_content_key]
+        bfn.set_bval(message_content)
     
     ########## Method for selecting mutation ##########
 

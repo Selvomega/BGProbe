@@ -57,7 +57,36 @@ def get_ip_segments(ip_addr: str) -> list[int]:
     """
     ip_type : IPType = get_ip_type(ip_addr)
     full_ip_addr = complete_ip_str(ip_addr.split('/')[0])
-    if ip_type == IPType.IPV4:
-        return list(map(int, full_ip_addr.split(':')))
+    if ip_type == IPType.IPV6:
+        ret_value = list(map(int, full_ip_addr.split(':')))
+        if len(ret_value) != 8:
+            raise ValueError(f"The IPv6 address should have 8 segments, while your address {full_ip_addr} has {len(ret_value)} segments")
+        return ret_value
     else:
-        return list(map(int, full_ip_addr.split('.')))
+        ret_value = list(map(int, full_ip_addr.split('.')))
+        if len(ret_value) != 4:
+            raise ValueError(f"The IPv4 address should have 4 segments, while your address {full_ip_addr} has {len(ret_value)} segments")
+        return ret_value
+
+def is_valid_ipv4(ip_str):
+    """
+    Check if the tring is a valid IPv4 address.
+    Return `True` if the address is a valid IPv4 address.
+    Return `False` otherwise
+    """
+    parts = ip_str.split('.')
+    # Must have 4 parts
+    if len(parts) != 4:
+        return False
+    for part in parts:
+        # Each part must be an integer
+        if not part.isdigit():
+            return False
+        num = int(part)
+        # Each number must be in 0-255
+        if num < 0 or num > 255:
+            return False
+        # Check leading 0's
+        if len(part) > 1 and part[0] == '0':
+            return False
+    return True

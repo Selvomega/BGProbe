@@ -1,9 +1,79 @@
 from .binary_field_node import BinaryFieldNode
 from data_utils.binary_utils import num2bytes, bytes2num
+from network_utils.utils import is_valid_ipv4, get_ip_segments
 import numpy as np
 import random
+from abc import abstractmethod
 
-class Length_BFN(BinaryFieldNode):
+class Number_BFN(BinaryFieldNode):
+    """
+    The field representing a number.
+    """
+    def __init__(self,
+                 num_val: int,
+                 num_len: int = 1):
+        
+        ###### Basic attributes ######
+
+        super().__init__()
+
+        ###### Set the weights ######
+        self.weights = np.ones(len(Number_BFN.mutation_set))
+        self.weights /= np.sum(self.weights)
+
+        ###### special attributes ######
+
+        self.num_val = num_val
+        self.num_len = num_len
+
+    @classmethod
+    @abstractmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        raise NotImplementedError()
+
+    ########## Get binary info ##########
+
+    def get_binary_expression_inner(self):
+        """Get binary expression."""
+        return num2bytes(self.num_val, self.num_len)
+    
+    ########## Update according to dependencies ##########
+    
+    def update_on_dependencies_inner(self):
+        """
+        Update the current BFN according to its dependencies.
+        This BFN do not have dependencies.
+        """
+        # You should not raise error because of `attach` function
+        return
+
+    ########## Methods for generating random mutation ##########
+
+    def random_num(self) -> int:
+        """
+        Return a random number value.
+        """
+        byte_seq = random.randbytes(self.num_len)
+        return bytes2num(byte_seq)
+
+    ########## Methods for applying mutation ##########
+
+    @BinaryFieldNode.set_function_decorator
+    def set_num(self, num_val: int):
+        """
+        Set the number value of current BFN.
+        """
+        self.num_val = num_val
+
+    ########## Method for selecting mutation ##########
+
+    # Overwrite the father class' mutation_set
+    mutation_set = BinaryFieldNode.mutation_set + [
+        BinaryFieldNode.MutationItem(random_num, set_num)
+    ]
+
+class Length_BFN(Number_BFN):
     """
     The length field.
     """
@@ -15,27 +85,15 @@ class Length_BFN(BinaryFieldNode):
 
         ###### Basic attributes ######
 
-        self.children : dict[str,BinaryFieldNode] = {}
-        self.parent : BinaryFieldNode = None
-        self.dependencies = dict[str,BinaryFieldNode] = {}
-        self.depend_on_me = dict[str,BinaryFieldNode] = {}
-        self.detached = False
-        self.binary_content : bytes = None
-        self.prefix : bytes = b''
-        self.suffix : bytes = b''
+        super().__init__(num_val=length_val, num_len=length_byte_len)
 
-        # Initialize all weights to 1.
-        # IMPORTANT: use the `mutation_set` of current class!
+        ###### Set the weights ######
         self.weights = np.ones(len(Length_BFN.mutation_set))
-        # Normalize
         self.weights /= np.sum(self.weights)
-        # Set the learning rate.
-        self.eta = 0.05
 
         ###### special attributes ######
 
-        self.length_val = length_val
-        self.length_byte_len = length_byte_len
+        # `num_val` and `num_len` has been defined in `Number_BFN`.
         # If the length should consider the length field itself.
         self.include_myself = include_myself
     
@@ -46,9 +104,7 @@ class Length_BFN(BinaryFieldNode):
     
     ########## Get binary info ##########
 
-    def get_binary_expression_inner(self):
-        """Get binary expression."""
-        return num2bytes(self.length_val, self.length_byte_len)
+    # Defined in `Number_BFN`
 
     ########## Update according to dependencies ##########
     
@@ -63,32 +119,31 @@ class Length_BFN(BinaryFieldNode):
         self.length_val = len_sum
 
     ########## Methods for generating random mutation ##########
-
-    def random_length(self):
+    
+    def random_length(self) -> int:
         """
-        Return a random length fitting in `self.length_byte_len` bytes 
+        Return a random length fitting in `self.length_byte_len` bytes.
+        Just an encapsulation of the father class' method. 
         """
-        byte_seq = random.randbytes(self.length_byte_len)
-        return bytes2num(byte_seq)
+        return self.random_num()
 
     ########## Methods for applying mutation ##########
 
-    @BinaryFieldNode.set_function_decorator
     def set_length(self, length_val: int):
         """
         Set the length_val of current BFN.
+        Just an encapsulation of the father class' method. 
+        So there is NO decorator. 
         """
-        self.length_val = length_val
+        self.set_num(length_val)
     
     ########## Method for selecting mutation ##########
 
     # Overwrite the father class' mutation_set
-    mutation_set = BinaryFieldNode.mutation_set + [
-        BinaryFieldNode.MutationItem(random_length, set_length)
-    ]
+    mutation_set = Number_BFN.mutation_set
 
 
-class ASN_BFN(BinaryFieldNode):
+class ASN_BFN(Number_BFN):
     """
     The AS number field.
     """
@@ -99,27 +154,16 @@ class ASN_BFN(BinaryFieldNode):
 
         ###### Basic attributes ######
 
-        self.children : dict[str,BinaryFieldNode] = {}
-        self.parent : BinaryFieldNode = None
-        self.dependencies = dict[str,BinaryFieldNode] = {}
-        self.depend_on_me = dict[str,BinaryFieldNode] = {}
-        self.detached = False
-        self.binary_content : bytes = None
-        self.prefix : bytes = b''
-        self.suffix : bytes = b''
+        super().__init__(num_val=asn, num_len=asn_byte_len)
 
-        # Initialize all weights to 1.
-        # IMPORTANT: use the `mutation_set` of current class!
+        ###### Set the weights ######
         self.weights = np.ones(len(ASN_BFN.mutation_set))
-        # Normalize
         self.weights /= np.sum(self.weights)
-        # Set the learning rate.
-        self.eta = 0.05
 
         ###### special attributes ######
 
-        self.asn = asn
-        self.asn_byte_len = asn_byte_len
+        # No special attributes
+        # Defined in `Number_BFN`
     
     @classmethod
     def get_bfn_name() -> str:
@@ -128,31 +172,22 @@ class ASN_BFN(BinaryFieldNode):
     
     ########## Get binary info ##########
 
-    def get_binary_expression_inner(self):
-        """Get binary expression."""
-        return num2bytes(self.asn, self.asn_byte_len)
+    # Defined in `Number_BFN`
 
     ########## Update according to dependencies ##########
     
-    def update_on_dependencies_inner(self):
-        """
-        Update the current BFN according to its dependencies.
-        This BFN do not have dependencies.
-        """
-        # You should not raise error because of `attach` function
-        return
+    # Defined in `Number_BFN`
 
     ########## Methods for generating random mutation ##########
 
-    def random_asn(self):
+    def random_asn(self) -> int:
         """
         Return a random AS number.
-        Only care about the number, may not be legal.
+        Just an encapsulation of the father class' method. 
         """
-        byte_seq = random.randbytes(self.asn_byte_len)
-        return bytes2num(byte_seq)
+        return self.random_num()
 
-    def random_legal_asn(self):
+    def random_legal_asn(self) -> int:
         """
         Return a random AS number.
         The AS numbr is guaranteed to be legal.
@@ -168,7 +203,7 @@ class ASN_BFN(BinaryFieldNode):
             return bytes2num(byte_seq)
     
     # To be checked. 
-    def random_short_asn(self):
+    def random_short_asn(self) -> int:
         """
         Random short AS number.
         Normally a short asn should not be used in long ASN expression.
@@ -177,20 +212,179 @@ class ASN_BFN(BinaryFieldNode):
 
     ########## Methods for applying mutation ##########
 
-    @BinaryFieldNode.set_function_decorator
     def set_asn(self, asn: int):
         """
         Set the ASN of current BFN.
+        Just an encapsulation of the father class' method. 
+        So there is NO decorator. 
         """
-        self.asn = asn
+        self.set_num()
 
     ########## Method for selecting mutation ##########
 
     # Overwrite the father class' mutation_set
-    mutation_set = BinaryFieldNode.mutation_set + [
-        BinaryFieldNode.MutationItem(random_asn, set_asn),
+    mutation_set = Number_BFN.mutation_set + [
         BinaryFieldNode.MutationItem(random_legal_asn, set_asn),
         BinaryFieldNode.MutationItem(random_short_asn, set_asn)
     ]
 
+class IPv4Address_BFN(BinaryFieldNode):
+    """
+    The IPv4 address field.
+    """
+    def __init__(self,
+                 ip_addr: str):
+        """Initialize the IPv4 address BFN."""
+        
+        if not is_valid_ipv4(ip_addr):
+            raise ValueError(f"Please enter a valid IPv4 address (Your input: {ip_addr})")
 
+        ###### Basic attributes ######
+
+        super().__init__()
+
+        ###### Set the weights ######
+        self.weights = np.ones(len(IPv4Address_BFN.mutation_set))
+        self.weights /= np.sum(self.weights)
+
+        ###### special attributes ######
+
+        self.ip_addr = ip_addr
+
+    @classmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        return "IPv4Address_BFN"
+    
+    ########## Get binary info ##########
+
+    def get_binary_expression_inner(self):
+        """Get binary expression."""
+        segments = get_ip_segments(self.ip_addr)
+        return b''.join([
+            num2bytes(segment,1) for segment in segments
+        ])
+
+    ########## Update according to dependencies ##########
+    
+    def update_on_dependencies_inner(self):
+        """
+        Update the current BFN according to its dependencies.
+        This BFN do not have dependencies.
+        """
+        # You should not raise error because of `attach` function
+        return
+    
+    ########## Methods for generating random mutation ##########
+
+    def random_ip_addr(self) -> str:
+        """
+        Return a random IPv4 address.
+        """
+        byte_seq = [random.randbytes(1) for _ in range(0,4)]
+        int_seq = [bytes2num(byte_elem) for byte_elem in byte_seq]
+        ip_addr = '.'.join([str(num) for num in int_seq])
+        return ip_addr
+
+    ########## Methods for applying mutation ##########
+
+    @BinaryFieldNode.set_function_decorator
+    def set_ip_addr(self, ip_addr: str):
+        """
+        Set the IPv4 address of current BFN.
+        """
+        if not is_valid_ipv4(ip_addr):
+            raise ValueError(f"Please enter a valid IPv4 address (Your input: {ip_addr})")
+        self.ip_addr = ip_addr
+    
+    ########## Method for selecting mutation ##########
+
+    # Overwrite the father class' mutation_set
+    mutation_set = BinaryFieldNode.mutation_set + [
+        BinaryFieldNode.MutationItem(random_ip_addr, set_ip_addr)
+    ]
+
+class BinaryFieldList_BFN(BinaryFieldNode):
+    """
+    A list of BinaryFieldNode.
+    All BFNs must have the same type.
+    """
+
+    def __init__(self,
+                 bfn_list : list[BinaryFieldNode],
+                 list_element_name : str):
+        """Initialize the IPv4 address BFN."""
+
+        ###### Basic attributes ######
+
+        super().__init__()
+
+        ###### Set the weights ######
+        self.weights = np.ones(len(BinaryFieldList_BFN.mutation_set))
+        self.weights /= np.sum(self.weights)
+
+        ###### special attributes ######
+
+        # Check all BFNs in the input list are of the same 
+        for bfn in bfn_list:
+            if bfn.get_bfn_name() != list_element_name:
+                raise ValueError(f"The input list of BFNs must contain name consistent with `list_element_name`!")
+
+        self.list_element_name : str = list_element_name
+        self.bfn_list : list[BinaryFieldNode] = bfn_list
+
+        ###### Deal with relations with and between children ######
+
+        # Initialize the children. 
+        # The sequence is very important.
+        # Parents can still be `None`
+        for bfn in self.bfn_list:
+            self.append_child(bfn)
+        # Update the detach state of the current BFN.
+        self.detach_according_to_children()
+    
+    # This is NOT a `classmethod`!
+    def get_bfn_name(self) -> str:
+        """Get the name of the BFN."""
+        return f"BinaryFieldList_BFN__{self.list_element_name}__"
+    
+    ########## Get binary info ##########
+
+    def get_binary_expression_inner(self):
+        """Get binary expression."""
+        return b''.join([
+            child.get_binary_expression() for child in self.children.values()
+        ])
+
+    ########## Update according to dependencies ##########
+    
+    def update_on_dependencies_inner(self):
+        """
+        Update the current BFN according to its dependencies.
+        This BFN do not have dependencies.
+        """
+        # You should not raise error because of `attach` function
+        return
+
+    ########## Methods for generating random mutation ##########
+    
+    # Defined in `BinaryFieldNode`
+
+    ########## Methods for applying mutation ##########
+
+    @BinaryFieldNode.set_function_decorator
+    def append_bfn(self, bfn: BinaryFieldNode):
+        """
+        Append a BFN to the current BFN.
+        """
+        if self.list_element_name != bfn.get_bfn_name():
+            # The type of BFN do not match
+            print(f"The type of input BFN ({bfn.get_bfn_name()}) cannot match the type of BFNs in the BFN list ({self.list_element_name}).")
+            return
+        self.bfn_list.append(bfn)
+        self.append_child(bfn)
+
+    ########## Method for selecting mutation ##########
+
+    # Overwrite the father class' mutation_set
+    mutation_set = BinaryFieldNode.mutation_set
