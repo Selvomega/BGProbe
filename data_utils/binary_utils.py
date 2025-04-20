@@ -60,3 +60,25 @@ def is_binary_string(s):
     Check if a python string contains only `0` and `1`.
     """
     return set(s).issubset({'0', '1'})
+
+def list2byte(bits_list) -> bytes:
+    """
+    Convert a zero-one list with length 8 to the corresponding byte.
+    Example:
+        >>> list_to_byte([1, 0, 1, 0, 1, 0, 1, 0])
+        b'\xaa'
+    """
+    if len(bits_list) != 8:
+        raise ValueError("The length of the input list must be 8")
+    
+    # Check if the list elements are all 0 or 1.
+    if any(bit not in (0, 1) for bit in bits_list):
+        raise ValueError("The list element must be 0 or 1!")
+    
+    # Compose the binary bits to an integer.
+    byte_value = 0
+    for bit in bits_list:
+        byte_value = (byte_value << 1) | bit
+    
+    # Conver the integer to a byte
+    return bytes([byte_value])

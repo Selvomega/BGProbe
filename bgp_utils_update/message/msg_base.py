@@ -189,7 +189,7 @@ class BaseMessage_BFN(BinaryFieldNode):
                  length_bfn: Length_BFN = Length_BFN(length_val=19,
                                                      length_byte_len=2,
                                                      include_myself=True),
-                 ): 
+                 ):
         """Initialize the BGP message."""
 
         ###### Basic attributes ######

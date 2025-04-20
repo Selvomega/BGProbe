@@ -113,16 +113,16 @@ class Length_BFN(Number_BFN):
         Update the current BFN according to its dependencies.
         Calculate the sum of length of the dependency fields.
         """
-        len_sum = self.length_byte_len if self.include_myself else 0
-        for dependency in self.dependencies:
+        len_sum = self.num_len if self.include_myself else 0
+        for dependency in self.dependencies.values():
             len_sum = len_sum + dependency.get_binary_length()
-        self.length_val = len_sum
+        self.num_val = len_sum
 
     ########## Methods for generating random mutation ##########
     
     def random_length(self) -> int:
         """
-        Return a random length fitting in `self.length_byte_len` bytes.
+        Return a random length fitting in `self.num_len` bytes.
         Just an encapsulation of the father class' method. 
         """
         return self.random_num()
@@ -218,7 +218,7 @@ class ASN_BFN(Number_BFN):
         Just an encapsulation of the father class' method. 
         So there is NO decorator. 
         """
-        self.set_num()
+        self.set_num(asn)
 
     ########## Method for selecting mutation ##########
 
@@ -347,6 +347,10 @@ class BinaryFieldList_BFN(BinaryFieldNode):
     def get_bfn_name(self) -> str:
         """Get the name of the BFN."""
         return f"BinaryFieldList_BFN__{self.list_element_name}__"
+
+    def get_list_len(self) -> int:
+        """Get the number of elements in the BFN list."""
+        return len(self.bfn_list)
     
     ########## Get binary info ##########
 
@@ -379,10 +383,27 @@ class BinaryFieldList_BFN(BinaryFieldNode):
         """
         if self.list_element_name != bfn.get_bfn_name():
             # The type of BFN do not match
-            print(f"The type of input BFN ({bfn.get_bfn_name()}) cannot match the type of BFNs in the BFN list ({self.list_element_name}).")
-            return
+            raise ValueError(f"The type of input BFN ({bfn.get_bfn_name()}) cannot match the type of BFNs in the BFN list ({self.list_element_name}).")
         self.bfn_list.append(bfn)
         self.append_child(bfn)
+    
+    def set_bfn_list(self, bfn_list: list[BinaryFieldNode]):
+        """
+        Reset the BFN list.
+        """
+        for bfn in bfn_list:
+            if bfn.get_bfn_name() != self.list_element_name:
+                raise ValueError(f"The input list of BFNs must contain name consistent with `list_element_name`!")
+        self.bfn_list : list[BinaryFieldNode] = bfn_list
+        # Clear the original children dictionary
+        for child in self.children.values():
+            child.parent = None
+        self.children.clear()
+        # Initialize the children.
+        for bfn in self.bfn_list:
+            self.append_child(bfn)
+        # Update the detach state of the current BFN.
+        self.detach_according_to_children()
 
     ########## Method for selecting mutation ##########
 

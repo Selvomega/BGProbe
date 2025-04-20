@@ -69,13 +69,13 @@ class BGPVersion_BFN(Number_BFN):
 
     ########## Methods for applying mutation ##########
 
-    def set_version_num(self, asn: int):
+    def set_version_num(self, version_num: int):
         """
         Set the BGP version number of current BFN.
         Just an encapsulation of the father class' method. 
         So there is NO decorator. 
         """
-        self.set_num()
+        self.set_num(version_num)
     
     ########## Method for selecting mutation ##########
 
@@ -127,13 +127,13 @@ class HoldTime_BFN(Number_BFN):
 
     ########## Methods for applying mutation ##########
 
-    def set_hold_time(self, asn: int):
+    def set_hold_time(self, hold_time: int):
         """
         Set the BGP hold time of current BFN.
         Just an encapsulation of the father class' method. 
         So there is NO decorator. 
         """
-        self.set_num()
+        self.set_num(hold_time)
     
     ########## Method for selecting mutation ##########
 
@@ -191,10 +191,10 @@ class OpenOptParmType_BFN(BinaryFieldNode):
         The returned value is guaranteed to be a valid optional parameter type.
         """
         # TODO: Current will only return `OptParmType.CAPABILITY`!
-        valid_message_types = [
+        valid_opt_parm_types = [
             member for member in OptParmType if member != OptParmType.UNDEFINED
         ]
-        return random.choice(valid_message_types)
+        return random.choice(valid_opt_parm_types)
     
     ########## Methods for applying mutation ##########
 
@@ -427,6 +427,7 @@ class OpenOptParmList_BFN(BinaryFieldList_BFN):
                  bfn_list : list[OpenOptParm_BFN]):
         """Initialize by calling BinaryFieldList_BFN's `__init__` method."""
         super().__init__(bfn_list, OpenOptParm_BFN.get_bfn_name())
+    
 
 # 0                   1                   2                   3
 # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
