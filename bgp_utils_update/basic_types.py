@@ -1,6 +1,6 @@
 from .binary_field_node import BinaryFieldNode
 from data_utils.binary_utils import num2bytes, bytes2num
-from network_utils.utils import is_valid_ipv4, get_ip_segments
+from network_utils.utils import is_valid_ipv4, is_valid_ipv4_prefix, get_ip_segments
 import numpy as np
 import random
 from abc import abstractmethod
@@ -304,6 +304,278 @@ class IPv4Address_BFN(BinaryFieldNode):
         BinaryFieldNode.MutationItem(random_ip_addr, set_ip_addr)
     ]
 
+class IPv4PrefixValue_BFN(BinaryFieldNode):
+    """
+    The IPv4 prefix value field.
+    """
+    def __init__(self,
+                 ip_addr: str):
+        """Initialize the IPv4 prefix BFN."""
+        
+        if not is_valid_ipv4_prefix(ip_addr):
+            raise ValueError(f"Please enter a valid IPv4 prefix (Your input: {ip_addr})")
+
+        ###### Basic attributes ######
+
+        super().__init__()
+
+        ###### Set the weights ######
+        self.weights = np.ones(len(IPv4PrefixValue_BFN.mutation_set))
+        self.weights /= np.sum(self.weights)
+
+        ###### special attributes ######
+
+        ip_part, prefix_length = ip_addr.split('/', 1)
+        self.ip_addr = ip_part
+        self.prefix_len = prefix_length
+        self.segment_num = (self.prefix_len+7) // 8
+        self.padding_bits = [0]*(self.segment_num*8-self.prefix_len)
+
+    @classmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        return "IPv4PrefixValue_BFN"
+
+    ########## Get binary info ##########
+
+    def get_binary_expression_inner(self):
+        """
+        Get binary expression.
+        Only preserve the 
+        """
+        segments = get_ip_segments(self.ip_addr)
+        segment_res = 8 - len(self.padding_bits)
+        segment_list = segments[:self.segment_num].copy()
+        if len(segment_list)>=1:
+            # Compute the valid part of the IP address.
+            base = 2**8
+            comp = 0
+            for i in range(0,segment_res):
+                base = base>>1
+                comp = comp | base
+            segment_list[-1] = segment_list[-1]&comp
+            # Compute the padding part of the IP address.
+            comp = 0
+            for bit in self.padding_bits:
+                comp = comp<<1
+                comp = comp | bit
+            segment_list[-1] = segment_list[-1]|comp
+        return b''.join([
+            num2bytes(segment,1) for segment in segment_list
+        ])
+
+    ########## Update according to dependencies ##########
+    
+    def update_on_dependencies_inner(self):
+        """
+        Update the current BFN according to its dependencies.
+        This BFN do not have dependencies.
+        """
+        # You should not raise error because of `attach` function
+        return
+    
+    ########## Methods for generating random mutation ##########
+
+    def random_ip_addr(self) -> str:
+        """
+        Return a random IPv4 address.
+        """
+        byte_seq = [random.randbytes(1) for _ in range(0,4)]
+        int_seq = [bytes2num(byte_elem) for byte_elem in byte_seq]
+        ip_addr = '.'.join([str(num) for num in int_seq])
+        return ip_addr
+    
+    def random_padding_bits(self) -> list[int]:
+        """
+        Return a random padding bit list.
+        """
+        return [random.randint(0,1) for _ in self.padding_bits]
+
+    def random_prefix_len(self) -> int:
+        """
+        Return a random prefix length.
+        """
+        return random.randint(0,32)
+
+    ########## Methods for applying mutation ##########
+
+    @BinaryFieldNode.set_function_decorator
+    def set_ip_addr(self, ip_addr: str):
+        """
+        Set the IPv4 address of current BFN.
+        """
+        if not is_valid_ipv4(ip_addr):
+            raise ValueError(f"Please enter a valid IPv4 address (Your input: {ip_addr})")
+        self.ip_addr = ip_addr
+    
+    @BinaryFieldNode.set_function_decorator
+    def set_padding_bits(self, padding_bits: list[int]):
+        """
+        Set the padding bits of current BFN.
+        """
+        if len(padding_bits) != len(self.padding_bits):
+            raise ValueError(f"The input padding bit list must have the same length with the current one.")
+        if any(bit not in (0, 1) for bit in padding_bits):
+            raise ValueError(f"The input padding bit list must only contain 0 or 1.")
+        self.padding_bits = padding_bits
+    
+    @BinaryFieldNode.set_function_decorator
+    def set_prefix_len(self, prefix_len: int):
+        """
+        Set the prefix length of current BFN.
+        """
+        if prefix_len<0 or prefix_len>32:
+            raise ValueError("The input length must be in [0,32]")
+        self.prefix_len = prefix_len
+        self.segment_num = (self.prefix_len+7) // 8
+        self.padding_bits = [0]*(self.segment_num*8-self.prefix_len)
+    
+    ########## Method for selecting mutation ##########
+
+    # Overwrite the father class' mutation_set
+    mutation_set = BinaryFieldNode.mutation_set + [
+        BinaryFieldNode.MutationItem(random_ip_addr, set_ip_addr),
+        BinaryFieldNode.MutationItem(random_padding_bits, set_padding_bits),
+        BinaryFieldNode.MutationItem(random_prefix_len, set_prefix_len)
+    ]
+
+class IPv4PrefixLength_BFN(Length_BFN):
+    """
+    The IPv4 prefix length field.
+    """
+    def __init__(self,
+                 length_val: int):
+        """
+        Initialize the IPv4 prefix length BFN
+        """
+
+        ###### Basic attributes ######
+
+        super().__init__(length_val=length_val,
+                         length_byte_len=1,
+                         include_myself=False)
+
+        ###### Set the weights ######
+        self.weights = np.ones(len(IPv4PrefixLength_BFN.mutation_set))
+        self.weights /= np.sum(self.weights)
+    
+    @classmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        return "IPv4PrefixLength_BFN"
+
+    ######### Update according to dependencies ##########
+    
+    def update_on_dependencies_inner(self):
+        """
+        Update the current BFN according to its dependencies.
+        The num_val is set to the length of the prefix.
+        """
+        dependency: IPv4PrefixValue_BFN = self.dependencies[f"{IPv4PrefixValue_BFN.get_bfn_name()}_0"]
+        self.num_val = dependency.prefix_len
+    
+class IPv4Prefix_BFN(BinaryFieldNode):
+    """
+    The full IPv4 prefix field.
+    """
+    def __init__(self,
+                 prefix_val_bfn: IPv4PrefixValue_BFN,
+                 prefix_len_bfn: IPv4PrefixLength_BFN):
+        """Initialize the full IPv4 prefix field."""
+        
+        ###### Basic attributes ######
+
+        super().__init__()
+
+        ###### Set the weights ######
+        self.weights = np.ones(len(IPv4Prefix_BFN.mutation_set))
+        self.weights /= np.sum(self.weights)
+
+        ###### special attributes ######
+
+        # No special attributes
+
+        ###### Deal with relations with and between children ######
+
+        # Initialize the children. 
+        # The sequence is very important.
+        # Parents can still be `None`
+        self.prefix_len_key  = self.append_child(prefix_len_bfn)
+        self.prefix_val_key = self.append_child(prefix_val_bfn)
+        # Update the detach state of the current BFN.
+        self.detach_according_to_children()
+        # Add dependencies between children
+        self.add_dependency_between_children(dependent_key=self.prefix_len_key,
+                                             dependency_key=self.prefix_val_key)
+        # Let children update
+        self.children_update()
+    
+    @classmethod
+    def get_bfn_name() -> str:
+        """Get the name of the BFN."""
+        return "IPv4Prefix_BFN"
+    
+    ########## Get binary info ##########
+
+    def get_binary_expression_inner(self):
+        """Get binary expression."""
+        # Concatenate the children's binary expressions.
+        return b''.join([
+            child.get_binary_expression() for child in self.children.values()
+        ])
+    
+    ########## Update according to dependencies ##########
+    
+    def update_on_dependencies_inner(self):
+        """
+        Update the current BFN according to its dependencies.
+        This BFN do not have dependencies.
+        """
+        # You should not raise error because of `attach` function
+        return
+    
+    ########## Methods for generating random mutation ##########
+
+    # Use methods from father class
+
+    ########## Methods for applying mutation ##########
+
+    # The following methods are recursively calling set-function of childrens, 
+    # so there is no need to use `set_function_decorator`
+
+    def set_prefix_len_len(self, length: int):
+        """
+        Set the value of the prefix length field. 
+        """
+        bfn: IPv4PrefixLength_BFN = self.children[self.prefix_len_key]
+        bfn.set_length(length)
+    
+    def set_prefix_val_len(self, length: int):
+        """
+        Set the prefix length of the prefix value field. 
+        """
+        bfn: IPv4PrefixValue_BFN = self.children[self.prefix_val_key]
+        bfn.set_prefix_len(length)
+    
+    def set_ip_addr(self, ip_addr: str):
+        """
+        Set the ip address of the prefix value field. 
+        """
+        bfn: IPv4PrefixValue_BFN = self.children[self.prefix_val_key]
+        bfn.set_ip_addr(ip_addr)
+    
+    def set_padding_bits(self, padding_bits: list[int]):
+        """
+        Set the padding bit list of the prefix value field.
+        """
+        bfn: IPv4PrefixValue_BFN = self.children[self.prefix_val_key]
+        bfn.set_padding_bits(padding_bits)
+    
+    ########## Method for selecting mutation ##########
+
+    # Overwrite the father class' mutation_set
+    mutation_set = BinaryFieldNode.mutation_set
+
 class BinaryFieldList_BFN(BinaryFieldNode):
     """
     A list of BinaryFieldNode.
@@ -312,7 +584,8 @@ class BinaryFieldList_BFN(BinaryFieldNode):
 
     def __init__(self,
                  bfn_list : list[BinaryFieldNode],
-                 list_element_name : str):
+                 list_element_name : str,
+                 BFN_type_check: bool = True):
         """Initialize the IPv4 address BFN."""
 
         ###### Basic attributes ######
@@ -325,9 +598,11 @@ class BinaryFieldList_BFN(BinaryFieldNode):
 
         ###### special attributes ######
 
+        self.BFN_type_check = BFN_type_check
+
         # Check all BFNs in the input list are of the same 
         for bfn in bfn_list:
-            if bfn.get_bfn_name() != list_element_name:
+            if self.BFN_type_check and bfn.get_bfn_name() != list_element_name:
                 raise ValueError(f"The input list of BFNs must contain name consistent with `list_element_name`!")
 
         self.list_element_name : str = list_element_name
@@ -381,7 +656,7 @@ class BinaryFieldList_BFN(BinaryFieldNode):
         """
         Append a BFN to the current BFN.
         """
-        if self.list_element_name != bfn.get_bfn_name():
+        if self.BFN_type_check and self.list_element_name != bfn.get_bfn_name():
             # The type of BFN do not match
             raise ValueError(f"The type of input BFN ({bfn.get_bfn_name()}) cannot match the type of BFNs in the BFN list ({self.list_element_name}).")
         self.bfn_list.append(bfn)
@@ -392,7 +667,7 @@ class BinaryFieldList_BFN(BinaryFieldNode):
         Reset the BFN list.
         """
         for bfn in bfn_list:
-            if bfn.get_bfn_name() != self.list_element_name:
+            if self.BFN_type_check and bfn.get_bfn_name() != self.list_element_name:
                 raise ValueError(f"The input list of BFNs must contain name consistent with `list_element_name`!")
         self.bfn_list : list[BinaryFieldNode] = bfn_list
         # Clear the original children dictionary

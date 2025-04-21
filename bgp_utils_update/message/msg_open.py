@@ -502,22 +502,11 @@ class OpenMessageContent_BFN(MessageContent_BFN):
 
     ########## Get binary info ##########
 
-    def get_binary_expression_inner(self):
-        """Get binary expression."""
-        # Concatenate the children's binary expressions.
-        return b''.join([
-            child.get_binary_expression() for child in self.children.values()
-        ])
+    # Use methods from father class
     
     ########## Update according to dependencies ##########
     
-    def update_on_dependencies_inner(self):
-        """
-        Update the current BFN according to its dependencies.
-        This BFN do not have dependencies.
-        """
-        # You should not raise error because of `attach` function
-        return
+    # Use methods from father class
     
     ########## Methods for generating random mutation ##########
 

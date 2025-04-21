@@ -36,20 +36,11 @@ class KeepAliveMessageContent_BFN(MessageContent_BFN):
 
     ########## Get binary info ##########
 
-    def get_binary_expression_inner(self):
-        """Get binary expression."""
-        # Return an empty byte sequence for the KEEPALIVE message.
-        return b''
+    # Use methods from father class
     
     ########## Update according to dependencies ##########
     
-    def update_on_dependencies_inner(self):
-        """
-        Update the current BFN according to its dependencies.
-        This BFN do not have dependencies.
-        """
-        # You should not raise error because of `attach` function
-        return
+    # Use methods from father class
     
     ########## Methods for generating random mutation ##########
 

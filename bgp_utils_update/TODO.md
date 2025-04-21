@@ -1,22 +1,15 @@
 # TODO
 
-## 1. Should a parent BFN detach when it has a detached child?
+## 1. "get_instance" method for messages, attributes, etc...
 
-- Yes, it should.
-- No, it does not have to, according to 3.
+## 2. BGP configuration.
 
-## 2. After I modified a successor, should I modify the ancestors? 
+## 3. Method to traverse the tree and perform mutation.
 
-- Yes, you should, according to the semantics
-- No, you do not need to, according to 3.
+## 4. Run through the pipeline.
 
-## 3. Can depend-on-me's have children?
+## 5. Solve the import problem.
 
-- No, they acnnot (?)
+## 6. Arbitratry path attribute.
 
-## 4. How to traverse the tree and make modifications?
-
-## 5. How to design the set-functions for a BFN with children?
-
-- Leave functions like `set_child`
-- But do not put such `set_child` functions in the `mutation_set`
+- Solved.

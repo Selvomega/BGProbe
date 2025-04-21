@@ -8,7 +8,7 @@ class MED_BFN(Number_BFN):
     """
     def __init__(self,
                  med: int):
-        """Initialize the ASN BFN."""
+        """Initialize the MED BFN."""
 
         ###### Basic attributes ######
 
