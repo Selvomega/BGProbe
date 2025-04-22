@@ -4,7 +4,7 @@ This class defines the test cases.
 
 from dataclasses import dataclass
 from types import FunctionType
-from bgp_utils.msg_base import Message
+from bgp_utils_update.message import Message
 from routing_software_interface.basic_types import RouterConfiguration
 
 class TestCase(list[Message]):

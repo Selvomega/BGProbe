@@ -1,9 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from dataclasses import dataclass
-from bgp_utils.basic_types import IP, IPPrefix
 from enum import Enum
 
 class RouterSoftwareType(Enum):
@@ -18,7 +16,7 @@ class Neighbor:
     """
     The dataclass defining the properties of a BGP neighbor
     """
-    peer_ip : IP
+    peer_ip : str
     peer_asn : int
     # local source used for communication
     local_source : str
@@ -30,19 +28,19 @@ class RouterConfiguration:
     """
     def __init__(self,
                  asn : int = 65001,
-                 router_id : IP = IP('1.1.1.1'),
-                 local_prefixes : list[IPPrefix] = [],
+                 router_id : str = '1.1.1.1',
+                 local_prefixes : list[str] = [],
                  neighbors : list[Neighbor] = []
                  ):
         """
         Initialize the BGP configuration
         """
         self.asn : int = asn
-        self.router_id : IP = router_id
-        self.local_prefixes : list[IPPrefix] = local_prefixes
+        self.router_id : str = router_id
+        self.local_prefixes : list[str] = local_prefixes
         self.neighbors : list[Neighbor] = neighbors
 
-    def append_local_prefix(self, prefix: IPPrefix):
+    def append_local_prefix(self, prefix: str):
         """
         Append a local prefix for the BGP instance.
         return True if you can make some modification
@@ -55,7 +53,7 @@ class RouterConfiguration:
             print(f"Prefix {prefix} already in the configuration.")
         return modify
 
-    def remove_local_prefix(self, prefix: IPPrefix):
+    def remove_local_prefix(self, prefix: str):
         """
         Remove a local prefix from the BGP instance.
         return True if you can make some modification

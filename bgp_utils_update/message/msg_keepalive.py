@@ -1,10 +1,5 @@
-from ..binary_field_node import BinaryFieldNode
-from ..basic_types import Number_BFN, ASN_BFN, Length_BFN, IPv4Address_BFN, BinaryFieldList_BFN
-from .msg_base import MessageType, MessageType_BFN, HeaderMarker_BFN, MessageContent_BFN, BaseMessage_BFN
-from data_utils.binary_utils import num2bytes
-from enum import Enum
-from functools import partial
-import random
+from ..basic_bfn_types import Length_BFN
+from .msg_base import MessageType, MessageType_BFN, HeaderMarker_BFN, MessageContent_BFN, BaseMessage_BFN, Message
 import numpy as np
 
 # A KEEPALIVE message consists of only the message header 
@@ -30,7 +25,7 @@ class KeepAliveMessageContent_BFN(MessageContent_BFN):
         # No special attributes
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "KeepAliveMessageContent_BFN"
 
@@ -62,11 +57,21 @@ class KeepAliveMessage_BFN(BaseMessage_BFN):
 
     def __init__(self,
                  message_content_bfn: KeepAliveMessageContent_BFN = KeepAliveMessageContent_BFN(),
-                 header_marker_bfn: HeaderMarker_BFN = HeaderMarker_BFN(),
-                 length_bfn: Length_BFN = Length_BFN(length_val=19,
-                                                     length_byte_len=2,
-                                                     include_myself=True),):
+                 header_marker_bfn: HeaderMarker_BFN = None,
+                 length_bfn: Length_BFN = None,):
         """Initialize the BGP OPEN message."""
+
+        ###### Redefine default input parameters to avoid shallow-copy ######
+
+        if header_marker_bfn is None:
+            header_marker_bfn = HeaderMarker_BFN()
+            
+        if length_bfn is None:
+            length_bfn = Length_BFN(length_val=19,
+                                    length_byte_len=2,
+                                    include_myself=True)
+
+        ###### Basic attributes ######
 
         super().__init__(message_type_bfn=MessageType_BFN(MessageType.OPEN),
                          message_content_bfn=message_content_bfn,
@@ -78,9 +83,18 @@ class KeepAliveMessage_BFN(BaseMessage_BFN):
         self.weights /= np.sum(self.weights)
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "KeepAliveMessage_BFN"
+
+    ########## Factory methods: Create an instance of the class ##########
+
+    @classmethod
+    def get_bfn(cls):
+        """
+        Get the KEEPALIVE message BFN from the BGP configuration.
+        """
+        return KeepAliveMessage_BFN()
 
     ########## Get binary info ##########
 
@@ -102,3 +116,15 @@ class KeepAliveMessage_BFN(BaseMessage_BFN):
 
     # Overwrite the father class' mutation_set
     mutation_set = BaseMessage_BFN.mutation_set
+
+class KeepAliveMessage(Message):
+    """
+    BGP KEEPALIVE message. 
+    """
+    def __init__(self, message_bfn: KeepAliveMessage_BFN):
+        """Initialize the BGP KEEPALIVE message"""
+        super().__init__(message_bfn)
+
+    def get_message_type(self):
+        """Return the type of the message."""
+        return MessageType.KEEPALIVE

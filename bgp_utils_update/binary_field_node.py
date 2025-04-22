@@ -63,9 +63,9 @@ class BinaryFieldNode(ABC):
         # and set by the parent via `add_dependency_between_children`.
         
         # the BFNs whose values decides the value of current BFN.
-        self.dependencies = dict[str,BinaryFieldNode] = {}
+        self.dependencies : dict[str,BinaryFieldNode] = {}
         # the BFNs whose values depend on the value of current BFN.
-        self.depend_on_me = dict[str,BinaryFieldNode] = {}
+        self.depend_on_me : dict[str,BinaryFieldNode] = {}
 
         ###### For modification ######
 
@@ -96,7 +96,7 @@ class BinaryFieldNode(ABC):
 
     @classmethod
     @abstractmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         raise NotImplementedError()
 
@@ -197,9 +197,13 @@ class BinaryFieldNode(ABC):
         parent node is not included in `depend_on_me`, 
         but is processed in `update_depend_on_me` function. 
         """
-        for bfn in self.depend_on_me:
+        # print(f"For debug: {self.get_bfn_name()} updating")
+        for bfn in self.depend_on_me.values():
+            # print(f"For debug: {bfn}")
             bfn.update()
-        self.parent.update()
+        if self.parent is not None:
+            # print(f"For debug: Calling update of parent {self.parent.get_bfn_name()}")
+            self.parent.update()
     
     def update(self):
         """

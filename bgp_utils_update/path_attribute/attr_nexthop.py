@@ -1,5 +1,5 @@
 from .attr_base import AttrType_BFN, AttrLength_BFN, BaseAttr_BFN, PathAttributeType
-from ..basic_types import IPv4Address_BFN
+from ..basic_bfn_types import IPv4Address_BFN
 import numpy as np
 
 NextHop_BFN = IPv4Address_BFN
@@ -23,7 +23,7 @@ class NextHopAttr_BFN(BaseAttr_BFN):
         self.weights /= np.sum(self.weights)
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "NextHopAttr_BFN"
 

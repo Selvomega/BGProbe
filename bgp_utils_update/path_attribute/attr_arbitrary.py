@@ -1,4 +1,4 @@
-from ..basic_types import BinaryFieldNode
+from ..basic_bfn_types import BinaryFieldNode
 from .attr_base import AttrType_BFN, AttrLength_BFN, BaseAttr_BFN
 import numpy as np
 
@@ -23,7 +23,7 @@ class Arbitrary_BFN(BinaryFieldNode):
         self.value = value
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "Arbitrary_BFN"
     
@@ -85,7 +85,7 @@ class ArbitraryAttr_BFN(BaseAttr_BFN):
         self.weights /= np.sum(self.weights)
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "ArbitraryAttr_BFN"
     

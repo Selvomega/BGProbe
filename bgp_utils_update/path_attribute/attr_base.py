@@ -1,5 +1,5 @@
 from ..binary_field_node import BinaryFieldNode
-from ..basic_types import Length_BFN
+from ..basic_bfn_types import Length_BFN
 from data_utils.binary_utils import num2bytes, bytes2num, list2byte
 from enum import Enum
 import random
@@ -82,7 +82,7 @@ class AttrType_BFN(BinaryFieldNode):
         self.attr_type : PathAttributeType = attr_type
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "AttrType_BFN"
 
@@ -209,7 +209,7 @@ class AttrLength_BFN(Length_BFN):
         self.weights /= np.sum(self.weights)
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "AttrLength_BFN"
 
@@ -264,7 +264,6 @@ class BaseAttr_BFN(BinaryFieldNode):
         # Update the detach state of the current BFN.
         self.detach_according_to_children()
         # Add dependencies between children
-        self.children[self.length_key].include_myself = False
         self.add_dependency_between_children(dependent_key=self.attr_len_key,
                                              dependency_key=self.attr_type_key)
         self.add_dependency_between_children(dependent_key=self.attr_len_key,
@@ -273,7 +272,7 @@ class BaseAttr_BFN(BinaryFieldNode):
         self.children_update()
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "BaseAttr_BFN"
     

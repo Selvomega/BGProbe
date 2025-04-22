@@ -28,7 +28,7 @@ class Number_BFN(BinaryFieldNode):
 
     @classmethod
     @abstractmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         raise NotImplementedError()
 
@@ -98,7 +98,7 @@ class Length_BFN(Number_BFN):
         self.include_myself = include_myself
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "Length_BFN"
     
@@ -166,7 +166,7 @@ class ASN_BFN(Number_BFN):
         # Defined in `Number_BFN`
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "ASN_BFN"
     
@@ -252,7 +252,7 @@ class IPv4Address_BFN(BinaryFieldNode):
         self.ip_addr = ip_addr
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "IPv4Address_BFN"
     
@@ -332,7 +332,7 @@ class IPv4PrefixValue_BFN(BinaryFieldNode):
         self.padding_bits = [0]*(self.segment_num*8-self.prefix_len)
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "IPv4PrefixValue_BFN"
 
@@ -460,7 +460,7 @@ class IPv4PrefixLength_BFN(Length_BFN):
         self.weights /= np.sum(self.weights)
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "IPv4PrefixLength_BFN"
 
@@ -511,7 +511,7 @@ class IPv4Prefix_BFN(BinaryFieldNode):
         self.children_update()
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "IPv4Prefix_BFN"
     

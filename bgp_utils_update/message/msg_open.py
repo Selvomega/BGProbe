@@ -1,6 +1,7 @@
 from ..binary_field_node import BinaryFieldNode
-from ..basic_types import Number_BFN, ASN_BFN, Length_BFN, IPv4Address_BFN, BinaryFieldList_BFN
-from .msg_base import MessageType, MessageType_BFN, HeaderMarker_BFN, MessageContent_BFN, BaseMessage_BFN
+from ..basic_bfn_types import Number_BFN, ASN_BFN, Length_BFN, IPv4Address_BFN, BinaryFieldList_BFN
+from ..bgp_configuration import BGP_Configuration
+from .msg_base import MessageType, MessageType_BFN, HeaderMarker_BFN, MessageContent_BFN, BaseMessage_BFN, Message
 from data_utils.binary_utils import num2bytes
 from enum import Enum
 from functools import partial
@@ -22,7 +23,8 @@ class OptParmValue(Enum):
     MP_BGP_IPV4 = b'\x01\x04\x00\x01\x00\x01'
     ROUTE_REFRESH = b'\x02\x00'
     ENHANCED_ROUTE_REFRESH = b'\x46\x00'
-    GRACEFUL_RESTART = b'\x06\x00'
+    GRACEFUL_RESTART = b'\x40\x00'
+    EXTENDED_MESSAGE = b'\x06\x00'
 
 class BGPVersion_BFN(Number_BFN):
     """
@@ -46,7 +48,7 @@ class BGPVersion_BFN(Number_BFN):
         # Defined in `Number_BFN`
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "BGPVersion_BFN"
     
@@ -104,7 +106,7 @@ class HoldTime_BFN(Number_BFN):
         # Defined in `Number_BFN`
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "HoldTime_BFN"
     
@@ -163,7 +165,7 @@ class OpenOptParmType_BFN(BinaryFieldNode):
         self.opt_parm_type = opt_parm_type
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "OpenOptParmType_BFN"
 
@@ -251,17 +253,15 @@ class OpenOptParmValue_BFN(BinaryFieldNode):
         self.opt_parm_val : OptParmValue = opt_parm_val
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
-        return "OpenOptParmType_BFN"
+        return "OpenOptParmValue_BFN"
 
     ########## Get binary info ##########
 
     def get_binary_expression_inner(self):
         """Get binary expression."""
-        return b''.join([
-            child.get_binary_expression() for child in self.children.values()
-        ])
+        return self.opt_parm_val.value
     
     ########## Update according to dependencies ##########
     
@@ -288,14 +288,14 @@ class OpenOptParmValue_BFN(BinaryFieldNode):
     ########## Methods for applying mutation ##########
 
     @BinaryFieldNode.set_function_decorator
-    def set_opt_parm_val(self, opt_parm_val: OptParmType):
+    def set_opt_parm_val(self, opt_parm_val: OptParmValue):
         """
         Set the optional parameter type of current BFN.
         """
         self.opt_parm_val = opt_parm_val
     
     @BinaryFieldNode.set_function_decorator
-    def set_opt_parm_type_val(self, opt_parm_val_val: bytes):
+    def set_opt_parm_val_val(self, opt_parm_val_val: bytes):
         """
         Set the optional paramter value's value of current BFN.
         Will set the binary content directly.
@@ -309,7 +309,7 @@ class OpenOptParmValue_BFN(BinaryFieldNode):
     # Overwrite the father class' mutation_set
     mutation_set = BinaryFieldNode.mutation_set + [
         BinaryFieldNode.MutationItem(random_opt_parm_val, set_opt_parm_val),
-        BinaryFieldNode.MutationItem(BinaryFieldNode.random_bval,set_opt_parm_type_val)
+        BinaryFieldNode.MutationItem(BinaryFieldNode.random_bval,set_opt_parm_val_val)
     ]
 
 # 0               1
@@ -325,10 +325,15 @@ class OpenOptParm_BFN(BinaryFieldNode):
     def __init__(self,
                  opt_parm_type: OpenOptParmType_BFN,
                  opt_parm_val: OpenOptParmValue_BFN,
-                 opt_parm_len: Length_BFN = Length_BFN(length_val=0,
-                                                       length_byte_len=1,
-                                                       include_myself=False)):
+                 opt_parm_len: Length_BFN = None):
         "Initialize the BGP OPEN message optional parameter BFN."
+
+        ###### Redefine default input parameters to avoid shallow-copy ######
+
+        if opt_parm_len is None:
+            opt_parm_len = Length_BFN(length_val=0,
+                                      length_byte_len=1,
+                                      include_myself=False)
         
         ###### Basic attributes ######
 
@@ -353,16 +358,27 @@ class OpenOptParm_BFN(BinaryFieldNode):
         # Update the detach state of the current BFN.
         self.detach_according_to_children()
         # Add dependencies between children
-        self.children[self.opt_parm_len_key].include_myself = False
         self.add_dependency_between_children(dependent_key=self.opt_parm_len_key,
                                              dependency_key=self.opt_parm_val_key)
         # Let children update
         self.children_update()
+        print(f"For debug: Optional parameter len - {self.children[self.opt_parm_len_key].num_val}, {self.children[self.opt_parm_len_key].get_binary_expression()}, {self.children}")
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "OpenOptParm_BFN"
+
+    ########## Factory methods: Create an instance of the class ##########
+
+    @classmethod
+    def get_capability_bfn(cls, capability_val: OptParmValue):
+        """Get the OpenOptParm_BFN from the optional parameter value."""
+        return OpenOptParm_BFN(
+            opt_parm_type=OpenOptParmType_BFN(OptParmType.CAPABILITY),
+            opt_parm_val=OpenOptParmValue_BFN(capability_val),
+            opt_parm_len=Length_BFN(length_val=0, length_byte_len=1, include_myself=False)
+        )
 
     ########## Get binary info ##########
 
@@ -456,13 +472,18 @@ class OpenMessageContent_BFN(MessageContent_BFN):
                  asn_bfn: ASN_BFN,
                  hold_time_bfn: HoldTime_BFN,
                  bgp_identifier_bfn: IPv4Address_BFN,
-                 opt_parm_len_bfn: Length_BFN = Length_BFN(
-                     length_val=0,
-                     length_byte_len=1
-                 ),
-                 opt_parm_bfn: OpenOptParmList_BFN = OpenOptParmList_BFN([])):
+                 opt_parm_len_bfn: Length_BFN = None,
+                 opt_parm_bfn: OpenOptParmList_BFN = None):
         """Initialize the BGP OPEN message content BFN."""
+
+        ###### Redefine default input parameters to avoid shallow-copy ######
+
+        if opt_parm_len_bfn is None:
+            opt_parm_len_bfn = Length_BFN(length_val=0, length_byte_len=1)
         
+        if opt_parm_bfn is None:
+            opt_parm_bfn = OpenOptParmList_BFN([])
+
         ###### Basic attributes ######
 
         super().__init__()
@@ -489,14 +510,13 @@ class OpenMessageContent_BFN(MessageContent_BFN):
         # Update the detach state of the current BFN.
         self.detach_according_to_children()
         # Add dependencies between children
-        self.children[self.opt_parm_len_key].include_myself = True
         self.add_dependency_between_children(dependent_key=self.opt_parm_len_key,
                                              dependency_key=self.opt_parm_key)
         # Let children update
         self.children_update()
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "OpenMessageContent_BFN"
 
@@ -571,11 +591,21 @@ class OpenMessage_BFN(BaseMessage_BFN):
 
     def __init__(self,
                  message_content_bfn: OpenMessageContent_BFN,
-                 header_marker_bfn: HeaderMarker_BFN = HeaderMarker_BFN(),
-                 length_bfn: Length_BFN = Length_BFN(length_val=19,
-                                                     length_byte_len=2,
-                                                     include_myself=True),):
+                 header_marker_bfn: HeaderMarker_BFN = None,
+                 length_bfn: Length_BFN = None,):
         """Initialize the BGP OPEN message."""
+
+        ###### Redefine default input parameters to avoid shallow-copy ######
+
+        if header_marker_bfn is None:
+            header_marker_bfn = HeaderMarker_BFN()
+            
+        if length_bfn is None:
+            length_bfn = Length_BFN(length_val=19,
+                                    length_byte_len=2,
+                                    include_myself=True)
+
+        ###### Basic attributes ######
 
         super().__init__(message_type_bfn=MessageType_BFN(MessageType.OPEN),
                          message_content_bfn=message_content_bfn,
@@ -587,9 +617,40 @@ class OpenMessage_BFN(BaseMessage_BFN):
         self.weights /= np.sum(self.weights)
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "OpenMessage_BFN"
+    
+    ########## Factory methods: Create an instance of the class ##########
+
+    @classmethod
+    def get_bfn(cls, bgp_config: BGP_Configuration):
+        """
+        Get the OPEN message BFN from the BGP configuration.
+        """
+        candidate_list = [
+            OpenOptParm_BFN.get_capability_bfn(OptParmValue.ROUTE_REFRESH),
+            OpenOptParm_BFN.get_capability_bfn(OptParmValue.ENHANCED_ROUTE_REFRESH),
+            OpenOptParm_BFN.get_capability_bfn(OptParmValue.EXTENDED_MESSAGE),
+            OpenOptParm_BFN.get_capability_bfn(OptParmValue.GRACEFUL_RESTART)
+        ]
+        selection_list = [
+            bgp_config.route_refresh,
+            bgp_config.enhanced_route_refresh,
+            bgp_config.extended_message,
+            bgp_config.graceful_restart,
+        ]
+        opt_parm_list = [
+            item for item, flag in zip(candidate_list, selection_list) if flag
+        ]
+        open_msg_content_bfn = OpenMessageContent_BFN(
+            bgp_version_bfn=BGPVersion_BFN(bgp_config.bgp_version),
+            asn_bfn=ASN_BFN(bgp_config.asn),
+            hold_time_bfn=HoldTime_BFN(bgp_config.hold_time),
+            bgp_identifier_bfn=IPv4Address_BFN(bgp_config.bgp_identifier),
+            opt_parm_bfn=OpenOptParmList_BFN(opt_parm_list)
+        )
+        return OpenMessage_BFN(open_msg_content_bfn)
 
     ########## Get binary info ##########
 
@@ -654,3 +715,15 @@ class OpenMessage_BFN(BaseMessage_BFN):
 
     # Overwrite the father class' mutation_set
     mutation_set = BaseMessage_BFN.mutation_set
+
+class OpenMessage(Message):
+    """
+    BGP OPEN message. 
+    """
+    def __init__(self, message_bfn: OpenMessage_BFN):
+        """Initialize the BGP OPEN message"""
+        super().__init__(message_bfn)
+
+    def get_message_type(self):
+        """Return the type of the message."""
+        return MessageType.OPEN

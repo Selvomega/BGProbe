@@ -1,8 +1,9 @@
 from ..binary_field_node import BinaryFieldNode
-from ..basic_types import Length_BFN
+from ..basic_bfn_types import Length_BFN
 from data_utils.binary_utils import num2bytes, bytes2num
 from enum import Enum
 from functools import partial
+from abc import ABC, abstractmethod
 import random
 import numpy as np
 
@@ -41,7 +42,7 @@ class HeaderMarker_BFN(BinaryFieldNode):
         # No special attributes
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "HeaderMarker_BFN"
 
@@ -97,7 +98,7 @@ class MessageType_BFN(BinaryFieldNode):
         self.message_type = message_type
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "MessageType_BFN"
     
@@ -160,7 +161,29 @@ class MessageType_BFN(BinaryFieldNode):
         )
     ]
 
-MessageContent_BFN = BinaryFieldNode
+class MessageContent_BFN(BinaryFieldNode):
+    """
+    BGP message content BFN.
+    """
+
+    ########## Get binary info ##########
+
+    def get_binary_expression_inner(self):
+        """Get binary expression."""
+        # Concatenate the children's binary expressions.
+        return b''.join([
+            child.get_binary_expression() for child in self.children.values()
+        ])
+
+    ########## Update according to dependencies ##########
+    
+    def update_on_dependencies_inner(self):
+        """
+        Update the current BFN according to its dependencies.
+        This BFN do not have dependencies.
+        """
+        # You should not raise error because of `attach` function
+        return
 
 # 0                   1                   2                   3
 # 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -185,12 +208,20 @@ class BaseMessage_BFN(BinaryFieldNode):
     def __init__(self,
                  message_type_bfn: MessageType_BFN,
                  message_content_bfn: MessageContent_BFN,
-                 header_marker_bfn: HeaderMarker_BFN = HeaderMarker_BFN(),
-                 length_bfn: Length_BFN = Length_BFN(length_val=19,
-                                                     length_byte_len=2,
-                                                     include_myself=True),
+                 header_marker_bfn: HeaderMarker_BFN = None,
+                 length_bfn: Length_BFN = None,
                  ):
         """Initialize the BGP message."""
+
+        ###### Redefine default input parameters to avoid shallow-copy ######
+
+        if header_marker_bfn is None:
+            header_marker_bfn = HeaderMarker_BFN()
+            
+        if length_bfn is None:
+            length_bfn = Length_BFN(length_val=19,
+                                    length_byte_len=2,
+                                    include_myself=True)
 
         ###### Basic attributes ######
 
@@ -227,7 +258,7 @@ class BaseMessage_BFN(BinaryFieldNode):
         self.children_update()
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "BaseMessage_BFN"
 
@@ -291,3 +322,23 @@ class BaseMessage_BFN(BinaryFieldNode):
 
     # Overwrite the father class' mutation_set
     mutation_set = BinaryFieldNode.mutation_set
+
+class Message(ABC):
+    """
+    Base type of BGP Message
+    """
+    def __init__(self,
+                 message_bfn: BaseMessage_BFN):
+        """Initilize the message."""
+        self.message_bfn = message_bfn
+    
+    @abstractmethod
+    def get_message_type(self):
+        """Get the type of the message."""
+        raise NotImplementedError()
+
+    def get_binary_expression(self):
+        """Get the binary expression of the message."""
+        return self.message_bfn.get_binary_expression()
+
+    # TODO: Extend the functionality of the message.

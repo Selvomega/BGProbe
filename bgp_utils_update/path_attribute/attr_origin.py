@@ -34,7 +34,7 @@ class Origin_BFN(AttrValue_BFN):
         self.origin_type : OriginType = origin_type
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "Origin_BFN"
     
@@ -101,7 +101,7 @@ class OriginAttr_BFN(BaseAttr_BFN):
         self.weights /= np.sum(self.weights)
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "OriginAttr_BFN"
 

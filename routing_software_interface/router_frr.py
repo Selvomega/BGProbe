@@ -63,7 +63,7 @@ class FRRRouter(BaseRouter):
             # Initialize the BGP speaker
             f"router bgp {self.router_configuration.asn}",
             # Set the BGP router id
-            f"bgp router-id {self.router_configuration.router_id.value}"
+            f"bgp router-id {self.router_configuration.router_id}"
         ]
         config_local_prefix = [
             # initialize the network prefixes
@@ -72,8 +72,8 @@ class FRRRouter(BaseRouter):
         config_neighbor = [
             # initialize the BGP neighbors
             command for neighbor in self.router_configuration.neighbors for command in [
-                f"neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}",
-                f"neighbor {neighbor.peer_ip.get_str_expression()} update-source {neighbor.local_source}"
+                f"neighbor {neighbor.peer_ip} remote-as {neighbor.peer_asn}",
+                f"neighbor {neighbor.peer_ip} update-source {neighbor.local_source}"
             ]
         ]
         commands = config_debugging_info + config_router_info + config_local_prefix + config_neighbor
@@ -105,7 +105,7 @@ class FRRRouter(BaseRouter):
         # Then make modification to the router instance
         if make_modification:
             commands = [
-                f"network {prefix.get_str_expression()}"
+                f"network {prefix}"
             ]
             self.execute_commands_in_router_level(commands)
 
@@ -120,7 +120,7 @@ class FRRRouter(BaseRouter):
         # Then make modification to the router instance
         if make_modification:
             commands = [
-                f"no network {prefix.get_str_expression()}"
+                f"no network {prefix}"
             ]
             self.execute_commands_in_router_level(commands)
     
@@ -136,8 +136,8 @@ class FRRRouter(BaseRouter):
         if make_modification:
             commands = [
                 command for neighbor in self.router_configuration.neighbors for command in [
-                    f"neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}",
-                    f"neighbor {neighbor.peer_ip.get_str_expression()} update-source {neighbor.local_source}"
+                    f"neighbor {neighbor.peer_ip} remote-as {neighbor.peer_asn}",
+                    f"neighbor {neighbor.peer_ip} update-source {neighbor.local_source}"
                 ]
             ]
             self.execute_commands_in_router_level(commands)
@@ -153,6 +153,6 @@ class FRRRouter(BaseRouter):
         # Then make modification to the router instance
         if make_modification:
             commands = [
-                f"no neighbor {neighbor.peer_ip.get_str_expression()} remote-as {neighbor.peer_asn}"
+                f"no neighbor {neighbor.peer_ip} remote-as {neighbor.peer_asn}"
             ]
             self.execute_commands_in_router_level(commands)

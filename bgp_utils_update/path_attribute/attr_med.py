@@ -1,4 +1,4 @@
-from ..basic_types import Number_BFN
+from ..basic_bfn_types import Number_BFN
 from .attr_base import AttrType_BFN, AttrLength_BFN, BaseAttr_BFN, PathAttributeType
 import numpy as np
 
@@ -24,7 +24,7 @@ class MED_BFN(Number_BFN):
         # Defined in `Number_BFN`
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "MED_BFN"
     
@@ -79,7 +79,7 @@ class MEDAttr_BFN(BaseAttr_BFN):
         self.weights /= np.sum(self.weights)
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "MEDAttr_BFN"
 

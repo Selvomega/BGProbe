@@ -1,5 +1,5 @@
 from ..binary_field_node import BinaryFieldNode
-from ..basic_types import Length_BFN, ASN_BFN, BinaryFieldList_BFN
+from ..basic_bfn_types import Length_BFN, ASN_BFN, BinaryFieldList_BFN
 from .attr_base import AttrType_BFN, AttrLength_BFN, AttrValue_BFN, BaseAttr_BFN, PathAttributeType
 from data_utils.binary_utils import num2bytes, bytes2num
 from enum import Enum
@@ -34,7 +34,7 @@ class PathSegementType_BFN(BinaryFieldNode):
         self.path_segment_type : PathSegementType_BFN = path_segment_type
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "PathSegementType_BFN"
 
@@ -105,7 +105,7 @@ class PathSegmentLength_BFN(Length_BFN):
         self.weights /= np.sum(self.weights)
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "PathSegmentLength_BFN"
     
@@ -169,14 +169,13 @@ class PathSegment_BFN(BinaryFieldNode):
         # Update the detach state of the current BFN.
         self.detach_according_to_children()
         # Add dependencies between children
-        self.children[self.pathseg_len_key].include_myself = False
         self.add_dependency_between_children(dependent_key=self.pathseg_len_key,
                                              dependency_key=self.pathseg_val_key)
         # Let children update
         self.children_update()
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "PathSegment_BFN"
 
@@ -256,8 +255,13 @@ class ASPathAttr_BFN(BaseAttr_BFN):
     """
     def __init__(self, 
                  attr_value_bfn: ASPath_BFN, 
-                 attr_len_bfn: AttrLength_BFN = AttrLength_BFN(length_val=0)):
+                 attr_len_bfn: AttrLength_BFN = None):
         """Initialize the BGP AS_PATH path attribute"""
+
+        ###### Redefine default input parameters to avoid shallow-copy ######
+
+        if attr_len_bfn is None:
+            attr_len_bfn = AttrLength_BFN(length_val=0)
 
         ###### Basic attributes ######
 
@@ -270,7 +274,7 @@ class ASPathAttr_BFN(BaseAttr_BFN):
         self.weights /= np.sum(self.weights)
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "ASPathAttr_BFN"
 

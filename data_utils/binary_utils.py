@@ -82,3 +82,9 @@ def list2byte(bits_list) -> bytes:
     
     # Conver the integer to a byte
     return bytes([byte_value])
+
+def make_bytes_displayable(byte_seq: bytes) -> str:
+    """
+    Convert the bytes to a displayable version.
+    """
+    return '\\x' + '\\x'.join(f'{b:02x}' for b in byte_seq)

@@ -4,8 +4,7 @@ This file defines the agent used by the test.
 
 from types import FunctionType
 from data_utils.serialize_utils import save_variable_to_file
-from bgp_utils.bgp_client_configuration import BGPClientConfiguration
-from bgp_utils.msg_base import MessageType
+from bgp_utils_update.message import MessageType
 from network_utils.tcp_client import TCPClient, TCPClientConfiguration
 from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType
 from routing_software_interface.router_frr import FRRRouter
@@ -16,7 +15,7 @@ class TestAgent:
     BGP software test agent. 
     """
     def __init__(self,
-                 bgp_client_config: BGPClientConfiguration,
+                 # bgp_client_config: BGPClientConfiguration,
                  tcp_client_config: TCPClientConfiguration,
                  router_config: RouterConfiguration,
                  router_type: RouterSoftwareType,
@@ -29,7 +28,7 @@ class TestAgent:
         """
         
         # First-stage initialization
-        self.bgp_client_config : BGPClientConfiguration = bgp_client_config
+        # self.bgp_client_config : BGPClientConfiguration = bgp_client_config
         self.tcp_client_config : TCPClientConfiguration = tcp_client_config
         self.router_config : RouterConfiguration = router_config
         self.router_type : RouterSoftwareType = router_type

@@ -1,6 +1,6 @@
-from ..basic_types import Length_BFN, IPv4Prefix_BFN, BinaryFieldList_BFN
+from ..basic_bfn_types import Length_BFN, IPv4Prefix_BFN, BinaryFieldList_BFN
 from ..path_attribute.attr_base import BaseAttr_BFN
-from .msg_base import MessageType, MessageType_BFN, HeaderMarker_BFN, MessageContent_BFN, BaseMessage_BFN
+from .msg_base import MessageType, MessageType_BFN, HeaderMarker_BFN, MessageContent_BFN, BaseMessage_BFN, Message
 import numpy as np
 
 class WithdrawnRoutes_BFN(BinaryFieldList_BFN):
@@ -87,7 +87,7 @@ class UpdateMessageContent_BFN(MessageContent_BFN):
         self.children_update()
 
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "UpdateMessageContent_BFN"
     
@@ -137,11 +137,21 @@ class UpdateMessage_BFN(BaseMessage_BFN):
     """
     def __init__(self,
                  message_content_bfn: UpdateMessageContent_BFN,
-                 header_marker_bfn: HeaderMarker_BFN = HeaderMarker_BFN(),
-                 length_bfn: Length_BFN = Length_BFN(length_val=23,
-                                                     length_byte_len=2,
-                                                     include_myself=True),):
+                 header_marker_bfn: HeaderMarker_BFN = None,
+                 length_bfn: Length_BFN = None,):
         """Initialize the BGP UPDATE message."""
+
+        ###### Redefine default input parameters to avoid shallow-copy ######
+
+        if header_marker_bfn is None:
+            header_marker_bfn = HeaderMarker_BFN()
+
+        if length_bfn is None:
+            length_bfn = Length_BFN(length_val=23,
+                                    length_byte_len=2,
+                                    include_myself=True)
+        
+        ###### Basic attributes ######
 
         super().__init__(message_type_bfn=MessageType_BFN(MessageType.OPEN),
                          message_content_bfn=message_content_bfn,
@@ -153,7 +163,7 @@ class UpdateMessage_BFN(BaseMessage_BFN):
         self.weights /= np.sum(self.weights)
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "UpdateMessage_BFN"
 
@@ -198,3 +208,15 @@ class UpdateMessage_BFN(BaseMessage_BFN):
 
     # Overwrite the father class' mutation_set
     mutation_set = BaseMessage_BFN.mutation_set
+
+class UpdateMessage(Message):
+    """
+    BGP UPDATE message. 
+    """
+    def __init__(self, message_bfn: UpdateMessage_BFN):
+        """Initialize the BGP UPDATE message"""
+        super().__init__(message_bfn)
+
+    def get_message_type(self):
+        """Return the type of the message."""
+        return MessageType.UPDATE

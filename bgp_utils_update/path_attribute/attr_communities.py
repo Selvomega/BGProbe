@@ -1,4 +1,4 @@
-from ..basic_types import BinaryFieldNode
+from ..basic_bfn_types import BinaryFieldNode
 from .attr_base import AttrType_BFN, AttrLength_BFN, AttrValue_BFN, BaseAttr_BFN, PathAttributeType
 from data_utils.binary_utils import num2bytes, bytes2num
 from enum import Enum
@@ -51,7 +51,7 @@ class Communities_BFN(AttrValue_BFN):
         self.operation : int = operation
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "Communities_BFN"
 
@@ -166,7 +166,7 @@ class CommunitiesAttr_BFN(BaseAttr_BFN):
         self.weights /= np.sum(self.weights)
     
     @classmethod
-    def get_bfn_name() -> str:
+    def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "CommunitiesAttr_BFN"
 

@@ -1,0 +1,70 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from bgp_utils_update.message import OpenMessage_BFN, OpenMessage, KeepAliveMessage_BFN, KeepAliveMessage
+from bgp_utils_update.bgp_configuration import BGP_Configuration, parse_bgp_config_from_yaml
+from test_agent.test_agent import TestAgent
+from test_agent.test_suite import TestCase, TestSuite
+from network_utils.tcp_client import TCPClientConfiguration
+from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType, Neighbor
+from data_utils.binary_utils import make_bytes_displayable
+
+from vnet_config import VNET_CONFIG
+
+BGP_CONFIG : BGP_Configuration = parse_bgp_config_from_yaml("bgp_config.yaml")
+
+router = VNET_CONFIG["router_software"]
+client = VNET_CONFIG["clients"][0]
+
+router_asn = 65001
+client_asn = 65002
+
+client_bgp_identifier = client["ip"].split('/')[0]
+client_ip = client["ip"].split('/')[0]
+router_ip = router["ip"].split('/')[0]
+client_namespace = client["namespace"]
+
+open_message_bfn = OpenMessage_BFN.get_bfn(BGP_CONFIG)
+
+keepalive_message_bfn = KeepAliveMessage_BFN.get_bfn()
+
+open_message = OpenMessage(open_message_bfn)
+print(make_bytes_displayable(open_message.get_binary_expression()))
+keepalive_message = KeepAliveMessage(keepalive_message_bfn)
+
+testcase0 = TestCase([open_message])
+testcase1 = TestCase([open_message,keepalive_message])
+
+test_suite = TestSuite([testcase1])
+
+def temp_func():
+    """Boo..."""
+    return False
+
+tcp_client_config = TCPClientConfiguration(host=router_ip,
+                                           port=179,
+                                           bind_val=(client_ip, 0),
+                                           netns=client_namespace)
+router_config = RouterConfiguration(
+    asn=router_asn,
+    router_id=router_ip,
+    neighbors=[Neighbor(
+        peer_ip=client_ip,
+        peer_asn=client_asn,
+        local_source=router["veth"]
+    )],
+    # local_prefixes=[
+    #     IPPrefix('192.0.2.0/24')
+    # ]
+)
+
+test_agent = TestAgent(
+    tcp_client_config = tcp_client_config,
+    router_config = router_config,
+    router_type=RouterSoftwareType.FRR,
+    test_suite=test_suite,
+    check_func=temp_func,
+    dump_path="temp.pkl"
+)
+
+test_agent.run_test_suite()

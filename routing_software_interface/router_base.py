@@ -39,7 +39,7 @@ class BaseRouter(ABC):
         raise NotImplementedError("`restart_bgp_instance` not implemented!")
 
     @abstractmethod
-    def append_local_prefix(self, prefix: IPPrefix):
+    def append_local_prefix(self, prefix: str):
         """
         Add a local prefix to the router.
         The base class will append the prefix to the configuration.
@@ -48,7 +48,7 @@ class BaseRouter(ABC):
         return self.router_configuration.append_local_prefix(prefix)
 
     @abstractmethod
-    def remove_local_prefix(self, prefix: IPPrefix):
+    def remove_local_prefix(self, prefix: str):
         """
         Reove a local prefix to the router.
         The base class will remove the prefix to the configuration.
