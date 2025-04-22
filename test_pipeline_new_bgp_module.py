@@ -1,8 +1,8 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from bgp_utils_update.message import OpenMessage_BFN, OpenMessage, KeepAliveMessage_BFN, KeepAliveMessage
-from bgp_utils_update.bgp_configuration import BGP_Configuration, parse_bgp_config_from_yaml
+from bgp_utils.message import OpenMessage_BFN, OpenMessage, KeepAliveMessage_BFN, KeepAliveMessage
+from bgp_utils.bgp_configuration import BGP_Configuration, parse_bgp_config_from_yaml
 from test_agent.test_agent import TestAgent
 from test_agent.test_suite import TestCase, TestSuite
 from network_utils.tcp_client import TCPClientConfiguration

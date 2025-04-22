@@ -4,11 +4,12 @@ This file defines the agent used by the test.
 
 from types import FunctionType
 from data_utils.serialize_utils import save_variable_to_file
-from bgp_utils_update.message import MessageType
+from bgp_utils.message import MessageType
 from network_utils.tcp_client import TCPClient, TCPClientConfiguration
 from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType
 from routing_software_interface.router_frr import FRRRouter
-from .test_suite import TestSuite, TestCaseArchive
+from routing_software_interface.log_utils import collect_log_frr, clear_log_frr
+from .test_suite import TestCase, TestSuite, TestCaseArchive
 
 class TestAgent:
     """
@@ -19,8 +20,6 @@ class TestAgent:
                  tcp_client_config: TCPClientConfiguration,
                  router_config: RouterConfiguration,
                  router_type: RouterSoftwareType,
-                 test_suite: TestSuite,
-                 check_func: FunctionType,
                  dump_path: str
                  ):
         """
@@ -32,8 +31,6 @@ class TestAgent:
         self.tcp_client_config : TCPClientConfiguration = tcp_client_config
         self.router_config : RouterConfiguration = router_config
         self.router_type : RouterSoftwareType = router_type
-        self.test_suite : TestSuite = test_suite
-        self.check_func : FunctionType = check_func
         self.dump_path : str = dump_path
 
         # Initialize the clients
@@ -44,11 +41,20 @@ class TestAgent:
             case _:
                 raise ValueError(f"Router type {router_type} undefined!")
     
-    def run_test_suite(self):
+    def run_single_testcase(self,
+                            test_case: TestCase,
+                            dump_path: str = None):
+        """
+        Run a single testcase
+        """
+    
+    def run_test_suite(self, 
+                       test_suite: TestSuite,
+                       check_func: FunctionType,):
         """
         Run the test suite, and check if the test case achieve the effect we want.
         """
-        for testcase in self.test_suite:
+        for testcase in test_suite:
             # First start the routing software and the TCP client.
             self.router_interface.start_bgp_instance()
             self.tcp_client.start()
@@ -60,11 +66,11 @@ class TestAgent:
                     # Receive the exchanged message for 
                     received = self.tcp_client.receive()
                 # TODO: deal with connection ending here
-                if self.check_func():
+                if check_func():
                     # if the testcase is satisfying
                     testcase_archive = TestCaseArchive(testcase=testcase,
                                                        router_config=self.router_config,
-                                                       check_func=self.check_func)
+                                                       check_func=check_func)
                     # Dump the testcase_archive to the storage. 
                     save_variable_to_file(testcase_archive,self.dump_path)
                     break
