@@ -1,7 +1,7 @@
 gcloud/*
 playground/*
 
-*/__pycache__/*
+**/__pycache__/*
 .DS_Store
 
 test.py
