@@ -1,5 +1,6 @@
 gcloud/*
 playground/*
+test_records*/
 
 **/__pycache__/
 **/__pycache__/*

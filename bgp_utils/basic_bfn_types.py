@@ -1,5 +1,5 @@
 from .binary_field_node import BinaryFieldNode
-from data_utils.binary_utils import num2bytes, bytes2num
+from basic_utils.binary_utils import num2bytes, bytes2num
 from network_utils.utils import is_valid_ipv4, is_valid_ipv4_prefix, get_ip_segments
 import numpy as np
 import random

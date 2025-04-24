@@ -73,7 +73,7 @@ class KeepAliveMessage_BFN(BaseMessage_BFN):
 
         ###### Basic attributes ######
 
-        super().__init__(message_type_bfn=MessageType_BFN(MessageType.OPEN),
+        super().__init__(message_type_bfn=MessageType_BFN(MessageType.KEEPALIVE),
                          message_content_bfn=message_content_bfn,
                          header_marker_bfn=header_marker_bfn,
                          length_bfn = length_bfn)

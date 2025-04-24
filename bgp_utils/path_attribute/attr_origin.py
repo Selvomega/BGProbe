@@ -1,6 +1,6 @@
 from ..binary_field_node import BinaryFieldNode
 from .attr_base import AttrType_BFN, AttrLength_BFN, AttrValue_BFN, BaseAttr_BFN, PathAttributeType
-from data_utils.binary_utils import num2bytes, bytes2num
+from basic_utils.binary_utils import num2bytes, bytes2num
 from enum import Enum
 import random
 import numpy as np

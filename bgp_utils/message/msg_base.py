@@ -1,6 +1,6 @@
 from ..binary_field_node import BinaryFieldNode
 from ..basic_bfn_types import Length_BFN
-from data_utils.binary_utils import num2bytes, bytes2num
+from basic_utils.binary_utils import num2bytes, bytes2num
 from enum import Enum
 from functools import partial
 from abc import ABC, abstractmethod

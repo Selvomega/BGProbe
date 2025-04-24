@@ -30,7 +30,8 @@ class RouterConfiguration:
                  asn : int = 65001,
                  router_id : str = '1.1.1.1',
                  local_prefixes : list[str] = [],
-                 neighbors : list[Neighbor] = []
+                 neighbors : list[Neighbor] = [],
+                 router_type: RouterSoftwareType = RouterSoftwareType.FRR
                  ):
         """
         Initialize the BGP configuration
@@ -39,6 +40,11 @@ class RouterConfiguration:
         self.router_id : str = router_id
         self.local_prefixes : list[str] = local_prefixes
         self.neighbors : list[Neighbor] = neighbors
+        self.router_type : RouterSoftwareType = router_type
+
+    def get_router_type(self) -> RouterSoftwareType:
+        """Get the router software type."""
+        return self.router_type
 
     def append_local_prefix(self, prefix: str):
         """

@@ -1,6 +1,6 @@
 from ..binary_field_node import BinaryFieldNode
 from ..basic_bfn_types import Length_BFN
-from data_utils.binary_utils import num2bytes, bytes2num, list2byte
+from basic_utils.binary_utils import num2bytes, bytes2num, list2byte
 from enum import Enum
 import random
 import numpy as np

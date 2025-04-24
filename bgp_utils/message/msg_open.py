@@ -2,7 +2,7 @@ from ..binary_field_node import BinaryFieldNode
 from ..basic_bfn_types import Number_BFN, ASN_BFN, Length_BFN, IPv4Address_BFN, BinaryFieldList_BFN
 from ..bgp_configuration import BGP_Configuration
 from .msg_base import MessageType, MessageType_BFN, HeaderMarker_BFN, MessageContent_BFN, BaseMessage_BFN, Message
-from data_utils.binary_utils import num2bytes
+from basic_utils.binary_utils import num2bytes
 from enum import Enum
 from functools import partial
 import random
@@ -362,7 +362,7 @@ class OpenOptParm_BFN(BinaryFieldNode):
                                              dependency_key=self.opt_parm_val_key)
         # Let children update
         self.children_update()
-        print(f"For debug: Optional parameter len - {self.children[self.opt_parm_len_key].num_val}, {self.children[self.opt_parm_len_key].get_binary_expression()}, {self.children}")
+        # print(f"For debug: Optional parameter len - {self.children[self.opt_parm_len_key].num_val}, {self.children[self.opt_parm_len_key].get_binary_expression()}, {self.children}")
 
     @classmethod
     def get_bfn_name(cls) -> str:

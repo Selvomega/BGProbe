@@ -10,10 +10,14 @@ class FRRRouter(BaseRouter):
     The interface for FRR router.
     """
 
+    ########## Initialization ##########
+
     def __init__(self, configuration : RouterConfiguration):
         """
         Initialize the BGP router. 
         """
+        if configuration.get_router_type() != RouterSoftwareType.FRR:
+            raise ValueError(f"Initializing FRR router with router type {configuration.get_router_type()}!")
         self.software_type : RouterSoftwareType = RouterSoftwareType.FRR
         self.router_configuration : RouterConfiguration = configuration
     
@@ -48,6 +52,8 @@ class FRRRouter(BaseRouter):
         full_commands = FRRRouter.FRR_CONFIG_TERMINAL + [f"-c 'router bgp {self.router_configuration.asn}'"] + modified_commands
         single_command = " ".join(full_commands)
         os.system(single_command)
+
+    ########## Turn on/off the instance ##########
 
     def start_bgp_instance(self):
         """
@@ -93,7 +99,9 @@ class FRRRouter(BaseRouter):
         Restart the BGP instance.
         """
         raise NotImplementedError("`restart_bgp_instance` not implemented!")
-    
+
+    ########## Modification ##########
+
     def append_local_prefix(self, prefix):
         """
         Add a local prefix to the router.
@@ -156,3 +164,19 @@ class FRRRouter(BaseRouter):
                 f"no neighbor {neighbor.peer_ip} remote-as {neighbor.peer_asn}"
             ]
             self.execute_commands_in_router_level(commands)
+
+    ########## Log manipulation ##########
+
+    def read_log(self):
+        """
+        Read (all) the content from the routing softwares' log.
+        Must execute with sudo-command.
+        """
+        return super().read_log("/var/log/frr/bgpd.log")
+
+    def clear_log(self):
+        """
+        Clear the content from the routing softwares' log.
+        Must execute with sudo-command.
+        """
+        super().clear_log("/var/log/frr/bgpd.log")
