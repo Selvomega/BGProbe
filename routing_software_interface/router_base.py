@@ -116,3 +116,28 @@ class BaseRouter(ABC):
         with open(path, 'w') as file:
             file.write('')
         return
+
+    ########## Crash management ##########
+
+    @abstractmethod
+    def if_crashed(self) -> bool:
+        """
+        Return if the router software has crashed.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def recover_from_crash(self):
+        """
+        Recover the software from crash.
+        """
+        raise NotImplementedError()
+
+    ########## Other utils ##########
+
+    @abstractmethod
+    def wait_for_log(self, time_duration: float):
+        """
+        Waiting until the log does not update anymore.
+        """
+        raise NotImplementedError()

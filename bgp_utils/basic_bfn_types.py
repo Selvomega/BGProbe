@@ -1,6 +1,6 @@
 from .binary_field_node import BinaryFieldNode
 from basic_utils.binary_utils import num2bytes, bytes2num
-from network_utils.utils import is_valid_ipv4, is_valid_ipv4_prefix, get_ip_segments
+from network_utils.utils import is_valid_ipv4, is_valid_ipv4_prefix, get_ip_segments, get_ipv4_prefix_parts
 import numpy as np
 import random
 from abc import abstractmethod
@@ -325,7 +325,7 @@ class IPv4PrefixValue_BFN(BinaryFieldNode):
 
         ###### special attributes ######
 
-        ip_part, prefix_length = ip_addr.split('/', 1)
+        ip_part, prefix_length = get_ipv4_prefix_parts(ip_addr)
         self.ip_addr = ip_part
         self.prefix_len = prefix_length
         self.segment_num = (self.prefix_len+7) // 8
@@ -514,6 +514,19 @@ class IPv4Prefix_BFN(BinaryFieldNode):
     def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "IPv4Prefix_BFN"
+
+    ########## Factory methods: Create an instance of the class ##########
+
+    @classmethod
+    def get_bfn(cls, ip_prefix: str):
+        """
+        Get the IPv4 prefix BFN from the ip prefix string.
+        """
+        if not is_valid_ipv4_prefix(ip_prefix):
+            raise ValueError("The input must be a valid IPv4 prefix like \"xx.xx.xx.xx/xx\"")
+        _, prefix_len = get_ipv4_prefix_parts(ip_prefix)
+        return IPv4Prefix_BFN(prefix_val_bfn=IPv4PrefixValue_BFN(ip_prefix),
+                              prefix_len_bfn=IPv4PrefixLength_BFN(prefix_len))
     
     ########## Get binary info ##########
 

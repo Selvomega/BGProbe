@@ -225,7 +225,7 @@ class OpenOptParmType_BFN(BinaryFieldNode):
         # BinaryFieldNode.MutationItem(random_opt_parm_type, set_opt_parm_type),
         BinaryFieldNode.MutationItem(
             partial(BinaryFieldNode.random_bval_fixed_len, 
-                    length=1), 
+                    length=1),
             set_opt_parm_type_val
         )
     ]

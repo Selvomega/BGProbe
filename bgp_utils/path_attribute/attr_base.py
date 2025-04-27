@@ -27,6 +27,9 @@ def calculate_attr_type_property(attr_type: PathAttributeType):
     Return values: 
     1. If the path attribute type is optional.
     2. If the path attribute type is transitive.
+    --------------------
+    Well-known attributes must be transitive.
+    Mandatory attributes MUST be included in every UPDATE message that contains NLRI.
     """
     match attr_type:
         case PathAttributeType.RESERVED:
@@ -224,7 +227,7 @@ class AttrLength_BFN(Length_BFN):
         for dependency_key, dependency_value in self.dependencies.items():
             if dependency_key.startswith(AttrType_BFN.get_bfn_name()):
                 self.num_len = 2 if dependency_value.ext_len else 1
-            elif dependency_key.startswith(AttrValue_BFN.get_bfn_name()):
+            elif dependency_key.endswith("Attr_BFN"):
                 len_sum = len_sum + dependency_value.get_binary_length()
         self.num_val = len_sum
 

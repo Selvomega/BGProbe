@@ -3,6 +3,7 @@ import os
 REPO_NAME = 'bgp_test'
 TESTCASE_DUMP_SINGLE = 'test_records_single'
 TESTCASE_DUMP_BATCHED = 'test_records_batched'
+TESTCASE_DUMP_CRASHED = 'test_records_crashed'
 
 def get_repo_root() -> str:
     """

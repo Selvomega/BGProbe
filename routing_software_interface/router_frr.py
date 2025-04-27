@@ -4,6 +4,8 @@ The frr router.
 
 from .basic_types import *
 from .router_base import BaseRouter
+from time import sleep
+import subprocess
 
 class FRRRouter(BaseRouter):
     """
@@ -180,3 +182,44 @@ class FRRRouter(BaseRouter):
         Must execute with sudo-command.
         """
         super().clear_log("/var/log/frr/bgpd.log")
+
+    ########## Crash management ##########
+
+    def if_crashed(self) -> bool:
+        """
+        Return if the router software has crashed.
+        """
+        output = subprocess.getoutput("systemctl is-active frr")
+        return output!="active"
+
+    def recover_from_crash(self):
+        """
+        Recover the software from crash.
+        """
+        started = not self.if_crashed()
+        counter = 0
+        while not started:
+            os.system("sudo systemctl start frr")
+            sleep(0.5)
+            started = not self.if_crashed()
+            counter  = counter + 1
+            if counter>=5:
+                raise ValueError("Restarting FRRouting failed for 5 times.")
+
+    ########## Other utils ##########
+
+    def wait_for_log(self, time_duration: float = 0.1):
+        """
+        Waiting until the log does not update anymore.
+        """
+        no_updates = False
+        prev_content = None
+        while not no_updates:
+            cur_content = self.read_log()
+            no_updates = prev_content==cur_content
+            prev_content = cur_content
+            sleep(time_duration) # Sleep for 0.1 second
+
+            # if not no_updates:
+            #     print("For debug")
+            #     print(f"Previous content:\n{prev_content}\nCurrent content:\n{cur_content}")

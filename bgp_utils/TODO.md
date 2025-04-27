@@ -6,11 +6,13 @@
 
 ## 3. Method to traverse the tree and perform mutation.
 
-## 4. Run through the pipeline.
-
 ==================================================
 
 ## 2. BGP configuration.
+
+- Solved
+
+## 4. Run through the pipeline.
 
 - Solved
 
@@ -21,3 +23,4 @@
 ## 6. Arbitratry path attribute.
 
 - Solved.
+

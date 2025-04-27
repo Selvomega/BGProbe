@@ -12,8 +12,10 @@ class PathSegementType(Enum):
     """
     AS_SET = 1
     AS_SEQUENCE = 2
+    AS_CONFED_SEQUENCE = 3
+    AS_CONFED_SET = 4
 
-class PathSegementType_BFN(BinaryFieldNode):
+class PathSegmentType_BFN(BinaryFieldNode):
     """
     Path segment type BFN.
     """
@@ -26,17 +28,17 @@ class PathSegementType_BFN(BinaryFieldNode):
         super().__init__()
 
         ###### Set the weights ######
-        self.weights = np.ones(len(PathSegementType_BFN.mutation_set))
+        self.weights = np.ones(len(PathSegmentType_BFN.mutation_set))
         self.weights /= np.sum(self.weights)
 
         ###### special attributes ######
 
-        self.path_segment_type : PathSegementType_BFN = path_segment_type
+        self.path_segment_type : PathSegmentType_BFN = path_segment_type
     
     @classmethod
     def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
-        return "PathSegementType_BFN"
+        return "PathSegmentType_BFN"
 
     ########## Get binary info ##########
 
@@ -139,7 +141,7 @@ class PathSegment_BFN(BinaryFieldNode):
     """
     
     def __init__(self,
-                 pathseg_type_bfn: PathSegementType_BFN,
+                 pathseg_type_bfn: PathSegmentType_BFN,
                  pathseg_len_bfn: PathSegmentLength_BFN,
                  pathseg_val_bfn: PathSegmentValue_BFN):
         """
@@ -209,7 +211,7 @@ class PathSegment_BFN(BinaryFieldNode):
 
     def set_path_segment_type(self, pathseg_type: PathSegementType):
         """Set the type of the path segment."""
-        bfn: PathSegementType_BFN = self.children[self.pathseg_type_key]
+        bfn: PathSegmentType_BFN = self.children[self.pathseg_type_key]
         bfn.set_path_segment_type(pathseg_type)
     
     def set_path_segment_length(self, pathseg_len: int):
@@ -248,6 +250,83 @@ class ASPath_BFN(BinaryFieldList_BFN):
         ###### Set the weights ######
         self.weights = np.ones(len(ASPath_BFN.mutation_set))
         self.weights /= np.sum(self.weights)
+    
+    ########## Factory methods: Create an instance of the class ##########
+
+    @classmethod
+    def get_bfn(cls,
+                as_path,
+                partition_segments: bool = True) -> "ASPath_BFN":
+        """
+        Generate a AS_PATH BFN with the input list of AS path.
+        ------------------------------
+        The input `as_path` can be a list/set or a tuple of lists/sets.
+        Each list represent an AS_SEQUENCE path segment.
+        Each set represent an AS_SET path segment.
+        ------------------------------
+        If `partition_segments` is set to be True, 
+        then the overly long segment (with length over 255) 
+        will be partitioned into pieces
+        ------------------------------
+        Please notice that sequence of AS numbers are reversed.
+        """
+        if isinstance(as_path, (list,set)):
+            as_path = (as_path,)
+        elif isinstance(as_path, tuple):
+            as_path = as_path
+        else:
+            raise TypeError("Input must be a list/set or tuple of lists/sets.")
+
+        pathseg_list = []
+
+        def split_from_end(original_ds, chunk_size=255):
+            # Convert to list
+            ordered_list = list(original_ds)
+            chunks = []
+            
+            # Cut from back to front
+            for i in range(len(ordered_list), 0, -chunk_size):
+                start = max(0, i - chunk_size)
+                chunk = ordered_list[start:i]
+                chunks.append(chunk)
+            
+            # Reverse the chunks
+            return chunks[::-1]
+
+        for segment in as_path:
+            if isinstance(segment, set):
+                # The path segment will have type AS_SET
+                if partition_segments:
+                    partitioned_segments = split_from_end(segment)
+                else:
+                    partitioned_segments = [segment]
+                for partitioned_segment in partitioned_segments:
+                    pathseg_list.append(PathSegment_BFN(
+                        PathSegmentType_BFN(PathSegementType.AS_SET),
+                        PathSegmentLength_BFN(len(partitioned_segment)),
+                        pathseg_val_bfn=PathSegmentValue_BFN([
+                            ASN_BFN(asn) for asn in partitioned_segment
+                        ])
+                    ))
+            elif isinstance(segment, list):
+                # The path segment will have type AS_SEQUENCE
+                if partition_segments:
+                    partitioned_segments = split_from_end(segment)
+                else:
+                    partitioned_segments = [segment]
+                for partitioned_segment in partitioned_segments:
+                    pathseg_list.append(PathSegment_BFN(
+                        PathSegmentType_BFN(PathSegementType.AS_SEQUENCE),
+                        PathSegmentLength_BFN(len(partitioned_segment)),
+                        pathseg_val_bfn=PathSegmentValue_BFN([
+                            ASN_BFN(asn) for asn in partitioned_segment
+                        ])
+                    ))
+            else:
+                raise TypeError("The tuple element must be a list/set.")
+        
+        return ASPath_BFN(pathseg_list=pathseg_list)
+        
 
 class ASPathAttr_BFN(BaseAttr_BFN):
     """
@@ -295,12 +374,12 @@ class ASPathAttr_BFN(BaseAttr_BFN):
     # The following methods are recursively calling set-function of childrens, 
     # so there is no need to use `set_function_decorator`
 
-    def append_aspath_segment(self, aspath_seg: PathSegementType_BFN):
+    def append_aspath_segment(self, aspath_seg: PathSegmentType_BFN):
         """Append a path segment to the AS_PATH attribute."""
         bfn: ASPath_BFN = self.children[self.attr_value_bfn]
         bfn.append_bfn(aspath_seg)
     
-    def set_aspath_list(self, aspath_seg_list: list[PathSegementType_BFN]):
+    def set_aspath_list(self, aspath_seg_list: list[PathSegmentType_BFN]):
         """Set the list of the Path Segments."""
         bfn: ASPath_BFN = self.children[self.attr_value_bfn]
         bfn.set_bfn_list(aspath_seg_list)

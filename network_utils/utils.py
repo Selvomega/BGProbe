@@ -120,3 +120,10 @@ def is_valid_ipv4_prefix(ip_str: str):
             return False
 
     return True
+
+def get_ipv4_prefix_parts(ip_str: str):
+    """
+    Get the address and prefix length parts of the ipv4 prefix.
+    """
+    ip_part, prefix_length = ip_str.split('/', 1)
+    return ip_part, int(prefix_length)

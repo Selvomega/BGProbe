@@ -44,27 +44,26 @@ class TestAgent:
         # Send the message one-by-one
         for message in test_case:
             self.tcp_client.send(message.get_binary_expression())
-            # TODO: Deal with connection ending and crashes here.
-            if message.get_message_type() in [MessageType.OPEN, MessageType.KEEPALIVE]:
-                # Receive the exchanged OPEN and KEEPALIVE message 
-                # to make the messages chronological
-                received = self.tcp_client.receive()
-        
-        from time import sleep
-        sleep(2)
+            router_interface.wait_for_log() # Wait the state to become stable.
+            if router_interface.if_crashed():
+                # (Currently) Save the router configuration and the testcase
+                # to a special folder and restart.
+                self.save_crash_setting(router_config=router_configuration,
+                                        test_case=test_case)
+                break
 
         if dump:
             log_content = router_interface.read_log()
             router_interface.clear_log()
             time_str = get_current_time()
-            dump_dir_path = f"{get_repo_root()}/{TESTCASE_DUMP_SINGLE}/{time_str}"
-            assert not directory_exists(dump_dir_path)
-            create_dir(dump_dir_path)
-            create_file(f"{dump_dir_path}/bgpd.log", log_content)
+            dump_path = f"{get_repo_root()}/{TESTCASE_DUMP_SINGLE}/{time_str}"
+            assert not directory_exists(dump_path)
+            create_dir(dump_path)
+            create_file(f"{dump_path}/bgpd.log", log_content)
             save_variable_to_file(router_configuration, 
-                                  f"{dump_dir_path}/router_conf.pkl")
+                                  f"{dump_path}/router_conf.pkl")
             save_variable_to_file(test_case, 
-                                  f"{dump_dir_path}/test_case.pkl")
+                                  f"{dump_path}/test_case.pkl")
         
         self.tcp_client.end()
         router_interface.end_bgp_instance()
@@ -93,13 +92,13 @@ class TestAgent:
                               f"{dump_dir_path}/check_func.pkl")
         save_variable_to_file(router_config,
                               f"{dump_dir_path}/router_conf.pkl")
-        for testcase in test_suite.testcases:
-            save_variable_to_file(testcase,
+        for test_case in test_suite.testcases:
+            save_variable_to_file(test_case,
                                   f"{dump_dir_path}/original_testcases.pkl")
 
         ###### Run test ######
 
-        for testcase in test_suite.testcases:
+        for test_case in test_suite.testcases:
             # First clear the log of the routing software.
             router_interface.clear_log()
             # First start the routing software and the TCP client.
@@ -107,23 +106,34 @@ class TestAgent:
             self.tcp_client.start()
 
             # Send the message one-by-one
-            for message in testcase:
+            for message in test_case:
                 self.tcp_client.send(message.get_binary_expression())
-                # TODO: Deal with connection ending and crashes here.
-                if message.get_message_type() in [MessageType.OPEN, MessageType.KEEPALIVE]:
-                    # Receive the exchanged OPEN and KEEPALIVE message 
-                    # to make the messages chronological
-                    received = self.tcp_client.receive()
+                router_interface.wait_for_log() # Wait the state to become stable.
+                if router_interface.if_crashed():
+                    # (Currently) Save the router configuration and the testcase
+                    # to a special folder and restart.
+                    self.save_crash_setting(router_config=router_config,
+                                            test_case=test_case)
+                    break
                 if check_func():
                     # Dump the testcase_archive to the storage. 
-                    save_variable_to_file(testcase,
+                    save_variable_to_file(test_case,
                                           f"{dump_dir_path}/passed_testcases.pkl")
                     break
-
-            # End of iteration, shut down the routing software and the TCP client.
-            from time import sleep
-            sleep(10)
 
             # Shut down the routing software and the TCP client.
             self.tcp_client.end()
             router_interface.end_bgp_instance()
+
+    def save_crash_setting(self,
+                           router_config: RouterConfiguration,
+                           test_case: TestCase):
+        """
+        Save the test setting causing crash.
+        """
+        time_str = get_current_time()
+        crash_dump_path = f"{get_repo_root()}/{TESTCASE_DUMP_CRASHED}"
+        save_variable_to_file(router_config,
+                              f"{crash_dump_path}/{time_str}.pkl")
+        save_variable_to_file(test_case,
+                              f"{crash_dump_path}/{time_str}.pkl")

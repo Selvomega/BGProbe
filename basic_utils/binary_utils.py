@@ -12,7 +12,8 @@ def num2bytes(num, octet_num, overflow_escape=False) -> bytes:
     bit_num = 8*octet_num
     if not 0 <= num < 2**bit_num:
         if not overflow_escape:
-            raise ValueError(f"The number {num} is not in the range 0-{2**bit_num-1}")
+            print(f"Warning: The number {num} is not in the range 0-{2**bit_num-1}")
+            # raise ValueError(f"The number {num} is not in the range 0-{2**bit_num-1}")
         num = num % (2**bit_num)  # Wrap around if out of range
     return num.to_bytes(octet_num, byteorder="big")
 
