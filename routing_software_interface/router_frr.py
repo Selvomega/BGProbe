@@ -70,6 +70,8 @@ class FRRRouter(BaseRouter):
         config_router_info = [
             # Initialize the BGP speaker
             f"router bgp {self.router_configuration.asn}",
+            # Use this command to allow ingress/egress without policy configuration.
+            "no bgp ebgp-requires-policy",
             # Set the BGP router id
             f"bgp router-id {self.router_configuration.router_id}"
         ]

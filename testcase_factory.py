@@ -86,3 +86,23 @@ update_message = UpdateMessage(update_message_bfn)
 
 # testcase
 testcase_2 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 3 ###############
+
+"""Testcase: Unmatched next-hop"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[client_asn],
+    next_hop="10.1.1.1", # Unmatched NEXT_HOP attribute.
+    nlri=["59.66.130.0/24"]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_3 = TestCase([open_message, keepalive_message, update_message])

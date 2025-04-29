@@ -227,7 +227,7 @@ class AttrLength_BFN(Length_BFN):
         for dependency_key, dependency_value in self.dependencies.items():
             if dependency_key.startswith(AttrType_BFN.get_bfn_name()):
                 self.num_len = 2 if dependency_value.ext_len else 1
-            elif dependency_key.endswith("Attr_BFN"):
+            else:
                 len_sum = len_sum + dependency_value.get_binary_length()
         self.num_val = len_sum
 
@@ -267,8 +267,10 @@ class BaseAttr_BFN(BinaryFieldNode):
         # Update the detach state of the current BFN.
         self.detach_according_to_children()
         # Add dependencies between children
+        # Defines the length field length.
         self.add_dependency_between_children(dependent_key=self.attr_len_key,
                                              dependency_key=self.attr_type_key)
+        # Defines the length field value.
         self.add_dependency_between_children(dependent_key=self.attr_len_key,
                                              dependency_key=self.attr_value_key)
         # Let children update
