@@ -5,31 +5,9 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from bgp_utils.message import OpenMessage_BFN, OpenMessage, KeepAliveMessage_BFN, KeepAliveMessage, UpdateMessage_BFN, UpdateMessage
-from bgp_utils.bgp_configuration import BGP_Configuration, parse_bgp_config_from_yaml
-from test_agent.test_agent import TestAgent
-from test_agent.test_suite import TestCase, TestSuite
-from network_utils.tcp_client import TCPClientConfiguration
-from network_utils.utils import get_ipv4_prefix_parts
-from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType, Neighbor
-from basic_utils.binary_utils import make_bytes_displayable
+from test_agent.test_suite import TestCase
 
-############### Basic configurations ###############
-
-# Load the local network configuration, 
-# which is related to the BGP software configuration
-from vnet_config import VNET_CONFIG
-# Software tester configuration
-client = VNET_CONFIG["clients"][0]
-
-# Load the test side configuration
-BGP_CONFIG : BGP_Configuration = parse_bgp_config_from_yaml("bgp_config.yaml")
-client_ip, _ = get_ipv4_prefix_parts(client['ip'])
-client_identifier = BGP_CONFIG.bgp_identifier
-client_asn = BGP_CONFIG.asn
-
-# Check the consistency between `VNET_CONFIG` and `BGP_CONFIG`.
-if client_ip != client_identifier:
-    print(f"Warning: The BGP tester's ip ({client_ip}) and BGP identifier {client_identifier} are not consistent!")
+from test_configuration import *
 
 ############### Vanilla messages ###############
 
@@ -78,8 +56,8 @@ keepalive_message = deepcopy(vanilla_keepalive_message)
 # UPDATE message
 update_message_bfn = UpdateMessage_BFN.get_bfn(
     withdrawn_routes=[],
-    aspath=[client_asn],
-    next_hop=client_ip,
+    aspath=[tester_client_asn],
+    next_hop=tester_client_ip,
     nlri=["59.66.130.0/24"]
 )
 update_message = UpdateMessage(update_message_bfn)
@@ -98,7 +76,7 @@ keepalive_message = deepcopy(vanilla_keepalive_message)
 # UPDATE message
 update_message_bfn = UpdateMessage_BFN.get_bfn(
     withdrawn_routes=[],
-    aspath=[client_asn],
+    aspath=[tester_client_asn],
     next_hop="10.1.1.1", # Unmatched NEXT_HOP attribute.
     nlri=["59.66.130.0/24"]
 )
@@ -106,3 +84,44 @@ update_message = UpdateMessage(update_message_bfn)
 
 # testcase
 testcase_3 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 4 ###############
+
+"""Testcase: Unmatched last AS number"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[1145, tester_client_asn],
+    next_hop=tester_client_ip, # Unmatched NEXT_HOP attribute.
+    nlri=["59.66.130.0/24"]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_4 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 4 ###############
+
+"""Testcase: UPDATE message without ORIGIN attribute"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# TODO: continue here.
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[1145, tester_client_asn],
+    next_hop=tester_client_ip, # Unmatched NEXT_HOP attribute.
+    nlri=["59.66.130.0/24"]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_4 = TestCase([open_message, keepalive_message, update_message])

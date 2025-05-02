@@ -1,5 +1,5 @@
 """
-This file defines the agent used by the test.
+This file defines the agent used to advertise malformed messages.
 """
 
 from types import FunctionType

@@ -143,7 +143,7 @@ def tear_down_vnet(config: dict):
 
 # Parse the yaml file
 # This can be used by other files
-VNET_CONFIG = parse_yaml("vnet_config.yaml")
+VNET_CONFIG = parse_yaml("config/vnet_config.yaml")
 
 ########## main function ##########
 

@@ -1,0 +1,77 @@
+13:29:16 | 5240   | welcome         | Thank you for using ExaBGP
+13:29:16 | 5240   | version         | 4.2.25
+13:29:16 | 5240   | interpreter     | 3.12.2 (main, Apr  6 2025, 12:00:24) [GCC 10.2.1 20210110]
+13:29:16 | 5240   | os              | Linux frr-instance 5.10.0-34-cloud-amd64 #1 SMP Debian 5.10.234-1 (2025-02-24) x86_64
+13:29:16 | 5240   | installation    | /home/xinpeilin/.local
+13:29:16 | 5240   | advice          | environment file missing
+13:29:16 | 5240   | advice          | generate it using "exabgp --fi > /home/xinpeilin/.local/etc/exabgp/exabgp.env"
+13:29:16 | 5240   | cli control     | named pipes for the cli are:
+13:29:16 | 5240   | cli control     | to send commands  /home/xinpeilin/.local/run/exabgp/exabgp.in
+13:29:16 | 5240   | cli control     | to read responses /home/xinpeilin/.local/run/exabgp/exabgp.out
+13:29:16 | 5240   | configuration   | performing reload of exabgp 4.2.25
+13:29:16 | 5240   | configuration   | > neighbor         | '10.0.0.127'
+13:29:16 | 5240   | configuration   | . router-id        | '10.0.0.2'
+13:29:16 | 5240   | configuration   | . local-address    | '10.0.0.2'
+13:29:16 | 5240   | configuration   | . local-as         | '65003'
+13:29:16 | 5240   | configuration   | . peer-as          | '65001'
+13:29:16 | 5240   | configuration   | < neighbor         | 
+13:29:16 | 5240   | reactor         | new peer: neighbor 10.0.0.127 local-ip 10.0.0.2 local-as 65003 peer-as 65001 router-id 10.0.0.2 family-allowed in-open
+13:29:16 | 5240   | reactor         | loaded new configuration successfully
+13:29:16 | 5240   | process         | forked process api-internal-cli-71d90c7c
+13:29:16 | 5240   | reactor         | initialising connection to peer-1
+13:29:16 | 5240   | outgoing-1      | attempting connection to 10.0.0.127:179
+13:29:16 | 5240   | outgoing-1      | sending TCP payload ( 177) FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF 00B1 0104 FDEB 00B4 0A00 0002 9402 0601 0400 0100 0102 0601 0400 0100 0202 0601 0400 0100 0402 0601 0400 0100 8002 0601 0400 0100 8402 0601 0400 0100 8502 0601 0400 0100 8602 0601 0400 0200 0102 0601 0400 0200 0202 0601 0400 0200 0402 0601 0400 0200 8002 0601 0400 0200 8502 0601 0400 0200 8602 0601 0400 1900 4102 0601 0400 1900 4602 0601 0440 0400 4702 0601 0440 0400 4802 0641 0400 00FD EB02 0206 00
+13:29:16 | 5240   | outgoing-1      | >> OPEN version=4 asn=65003 hold_time=180 router_id=10.0.0.2 capabilities=[Multiprotocol(ipv4 unicast,ipv4 multicast,ipv4 nlri-mpls,ipv4 mpls-vpn,ipv4 rtc,ipv4 flow,ipv4 flow-vpn,ipv6 unicast,ipv6 multicast,ipv6 nlri-mpls,ipv6 mpls-vpn,ipv6 flow,ipv6 flow-vpn,l2vpn vpls,l2vpn evpn,bgp-ls bgp-ls,bgp-ls bgp-ls-vpn), Extended Message(65535), ASN4(65003)]
+13:29:16 | 5240   | outgoing-1      | received complete TCP payload (  19) FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF 006D 01
+13:29:16 | 5240   | outgoing-1      | received complete TCP payload (  90) 04FD E900 B40A A800 0350 0206 0104 0001 0001 0202 0200 0202 4600 0206 4104 0000 FDE9 0202 0600 0206 4504 0001 0101 0207 4C05 0001 0100 0002 1049 0E0C 6672 722D 696E 7374 616E 6365 0002 0440 0240 7802 0947 0700 0101 8000 0000
+13:29:16 | 5240   | outgoing-1      | << message of type OPEN
+13:29:16 | 5240   | outgoing-1      | << OPEN version=4 asn=65001 hold_time=180 router_id=10.168.0.3 capabilities=[Multiprotocol(ipv4 unicast), Route Refresh, Extended Message(65535), Graceful Restart Flags 0x4 Time 120 , ASN4(65001), AddPath(receive ipv4 unicast), Enhanced Route Refresh, Unassigned 71, Unassigned 73, Unassigned 76]
+13:29:16 | 5240   | ka-outgoing-1   | receive-timer 60 second(s) left
+13:29:16 | 5240   | outgoing-1      | --------------------------------------------------------------------
+13:29:16 | 5240   | outgoing-1      | the connection can not carry the following family/families
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv6/flow
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv6/nlri-mpls
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv4/multicast
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv6/unicast
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for l2vpn/evpn
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv4/flow
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv4/nlri-mpls
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv4/mpls-vpn
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for bgp-ls/bgp-ls-vpn
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv6/mpls-vpn
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv4/rtc
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv6/multicast
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv6/flow-vpn
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for l2vpn/vpls
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for bgp-ls/bgp-ls
+13:29:16 | 5240   | outgoing-1      |  - peer is not configured for ipv4/flow-vpn
+13:29:16 | 5240   | outgoing-1      | therefore no routes of this kind can be announced on the connection
+13:29:16 | 5240   | outgoing-1      | --------------------------------------------------------------------
+13:29:16 | 5240   | outgoing-1      | sending TCP payload (  19) FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF 0013 04
+13:29:16 | 5240   | outgoing-1      | >> KEEPALIVE (OPENCONFIRM)
+13:29:16 | 5240   | outgoing-1      | received complete TCP payload (  19) FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF 0013 04
+13:29:16 | 5240   | outgoing-1      | << message of type KEEPALIVE
+13:29:16 | 5240   | ka-outgoing-1   | receive-timer 180 second(s) left
+13:29:16 | 5240   | reactor         | connected to peer-1 with outgoing-1 10.0.0.2-10.0.0.127
+13:29:16 | 5240   | outgoing-1      | sending TCP payload (  23) FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF 0017 0200 0000 00
+13:29:16 | 5240   | outgoing-1      | >> EOR ipv4 unicast
+13:29:16 | 5240   | peer-1          | >> EOR(s)
+13:29:16 | 5240   | ka-outgoing-1   | receive-timer 179 second(s) left
+13:29:16 | 5240   | ka-outgoing-1   | send-timer 59 second(s) left
+13:29:17 | 5240   | outgoing-1      | received complete TCP payload (  19) FFFF FFFF FFFF FFFF FFFF FFFF FFFF FFFF 0017 02
+13:29:17 | 5240   | outgoing-1      | received complete TCP payload (   4) 0000 0000
+13:29:17 | 5240   | outgoing-1      | << message of type UPDATE
+13:29:17 | 5240   | parser          | parsing UPDATE (   4) 0000 0000
+13:29:17 | 5240   | peer-1          | << UPDATE #1
+13:29:17 | 5240   | peer-1          |    UPDATE #1 nlri  (   4) eor 1/1 (ipv4 unicast)
+13:29:18 | 5240   | ka-outgoing-1   | receive-timer 179 second(s) left
+13:29:18 | 5240   | ka-outgoing-1   | send-timer 58 second(s) left
+13:29:19 | 5240   | ka-outgoing-1   | receive-timer 178 second(s) left
+13:29:19 | 5240   | ka-outgoing-1   | send-timer 57 second(s) left
+13:29:20 | 5240   | ka-outgoing-1   | receive-timer 177 second(s) left
+13:29:20 | 5240   | ka-outgoing-1   | send-timer 56 second(s) left
+13:29:20 | 5240   | reactor         | ^C received
+13:29:20 | 5240   | reactor         | performing shutdown
+13:29:20 | 5240   | outgoing-1      | stop, message [shutting down]
+13:29:20 | 5240   | outgoing-1      | outgoing-1 10.0.0.2-10.0.0.127, closing connection
+13:29:20 | 5240   | process         | terminating process api-internal-cli-71d90c7c

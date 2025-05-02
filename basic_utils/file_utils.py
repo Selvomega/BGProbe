@@ -1,9 +1,9 @@
 import os
 
 REPO_NAME = 'bgp_test'
-TESTCASE_DUMP_SINGLE = 'test_records_single'
-TESTCASE_DUMP_BATCHED = 'test_records_batched'
-TESTCASE_DUMP_CRASHED = 'test_records_crashed'
+TESTCASE_DUMP_SINGLE = 'log/test_single'
+TESTCASE_DUMP_BATCHED = 'log/test_batched'
+TESTCASE_DUMP_CRASHED = 'log/test_crashed'
 
 def get_repo_root() -> str:
     """
