@@ -1,5 +1,5 @@
 from ..basic_bfn_types import Length_BFN, ASN_BFN, IPv4Prefix_BFN, BinaryFieldList_BFN
-from ..path_attribute import BaseAttr_BFN, OriginType, Origin_BFN, OriginAttr_BFN, PathSegementType, PathSegmentType_BFN, PathSegmentLength_BFN, PathSegmentValue_BFN, PathSegment_BFN, ASPath_BFN, ASPathAttr_BFN, NextHop_BFN, NextHopAttr_BFN, Arbitrary_BFN, ArbitraryAttr_BFN
+from ..path_attribute import BaseAttr_BFN, OriginType, Origin_BFN, OriginAttr_BFN, PathSegementType, PathSegmentType_BFN, PathSegmentLength_BFN, PathSegmentValue_BFN, PathSegment_BFN, ASPath_BFN, ASPathAttr_BFN, NextHop_BFN, NextHopAttr_BFN, Arbitrary_BFN, ArbitraryAttr_BFN, Communities_BFN, CommunitiesAttr_BFN
 from .msg_base import MessageType, MessageType_BFN, HeaderMarker_BFN, MessageContent_BFN, BaseMessage_BFN, Message
 import numpy as np
 
@@ -176,7 +176,7 @@ class UpdateMessage_BFN(BaseMessage_BFN):
     @classmethod
     def get_empty_message_bfn(cls):
         """
-        Get the **EMPTY** UPDATE message BFN from the BGP configuration.
+        Get the **EMPTY** UPDATE message BFN.
         """
         update_msg_content_bfn = UpdateMessageContent_BFN(
             wroutes_len_bfn=Length_BFN(0,2),
@@ -187,30 +187,68 @@ class UpdateMessage_BFN(BaseMessage_BFN):
         )
         return UpdateMessage_BFN(update_msg_content_bfn)
     
-    # TODO: You can extend this method!
+    # You can extend this method!
     @classmethod
     def get_bfn(cls,
-                withdrawn_routes: list[str],
                 aspath,
                 next_hop: str,
-                nlri: list[str]):
+                nlri: list[str],
+                withdrawn_routes: list[str] = None,
+                communities: list[tuple] = None) -> "UpdateMessage_BFN":
         """
-        Get the **EMPTY** UPDATE message BFN from the BGP configuration.
+        Get the UPDATE message BFN.
         """
+
+        ###### Redefine default input parameters to avoid shallow-copy ######
+
+        if withdrawn_routes is None:
+            withdrawn_routes = []
+        if communities is None:
+            communities = []
+
+        ###### Initialize the update message components ######
+        
         wroutes_bfn_list = [IPv4Prefix_BFN.get_bfn(wroute) for wroute in withdrawn_routes]
         nlri_list = [IPv4Prefix_BFN.get_bfn(nlri_elem) for nlri_elem in nlri]
+
+        # Initialize path attributes
         attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
-        attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=aspath))
+        attr_aspath = ASPathAttr_BFN.get_bfn(as_path=aspath)
         attr_nexthop = NextHopAttr_BFN(NextHop_BFN(next_hop))
+
+        path_attr_list=[
+            attr_origin,
+            attr_aspath,
+            attr_nexthop,
+        ]
+        if len(communities)>0:
+            attr_communities = CommunitiesAttr_BFN.get_bfn(community_list=communities)
+            path_attr_list.append(attr_communities)
+
         update_msg_content_bfn = UpdateMessageContent_BFN(
             wroutes_len_bfn=Length_BFN(0,2),
             wroutes_bfn=WithdrawnRoutes_BFN(wroutes_bfn_list),
             path_attr_len_bfn=Length_BFN(0,2),
-            path_attr_bfn=PathAttributes_BFN([
-                attr_origin,
-                attr_aspath,
-                attr_nexthop,
-            ]),
+            path_attr_bfn=PathAttributes_BFN(path_attr_list),
+            nlri_bfn=NLRI_BFN(nlri_list)
+        )
+        return UpdateMessage_BFN(update_msg_content_bfn)
+
+    @classmethod
+    def get_bfn_diy_attr(cls,
+                         withdrawn_routes: list[str],
+                         nlri: list[str],
+                         attr_bfn_list: list[BaseAttr_BFN]) -> "UpdateMessage_BFN":
+        """
+        Generate the UPDATE message BFN from the input parameter list.
+        """
+        wroutes_bfn_list = [IPv4Prefix_BFN.get_bfn(wroute) for wroute in withdrawn_routes]
+        nlri_list = [IPv4Prefix_BFN.get_bfn(nlri_elem) for nlri_elem in nlri]
+        update_msg_content_bfn = UpdateMessageContent_BFN(
+            wroutes_len_bfn=Length_BFN(0,2),
+            wroutes_bfn=WithdrawnRoutes_BFN(wroutes_bfn_list),
+            path_attr_len_bfn=Length_BFN(0,2),
+            path_attr_bfn=PathAttributes_BFN(attr_bfn_list),
             nlri_bfn=NLRI_BFN(nlri_list)
         )
         return UpdateMessage_BFN(update_msg_content_bfn)

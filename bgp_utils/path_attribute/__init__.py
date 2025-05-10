@@ -4,6 +4,8 @@ from .attr_aspath import PathSegementType, PathSegmentType_BFN, PathSegmentLengt
 from .attr_nexthop import NextHop_BFN, NextHopAttr_BFN
 from .attr_med import MED_BFN, MEDAttr_BFN
 from .attr_locpref import LOCPREF_BFN, LOCPREFAttr_BFN
-from .attr_communities import compose_communities_value, decompose_communities_value, WellKnownCommunities, Communities_BFN, CommunitiesAttr_BFN
+from .attr_communities import compose_communities_value, decompose_communities_value, WellKnownCommunities, SingleCommunity_BFN, Communities_BFN, CommunitiesAttr_BFN
+
+from .attr_mpnlri import AFI, SAFI, AFI_BFN, SAFI_BFN, MPNLRI_BFN, MPNextHop_BFN, MPWithdrawnRoutes_BFN, MPReachNLRI_BFN, MPUnreachNLRI_BFN, MPReachNLRIAttr_BFN, MPUnreachNLRIAttr_BFN
 
 from .attr_arbitrary import Arbitrary_BFN, ArbitraryAttr_BFN

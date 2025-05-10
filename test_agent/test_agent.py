@@ -11,7 +11,8 @@ from network_utils.tcp_client import TCPClient, TCPClientConfiguration
 from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType
 from routing_software_interface.router_frr import FRRRouter
 from routing_software_interface.utils import get_router_interface
-from .test_suite import TestCase, TestSuite, TestCaseArchive
+from .test_suite import TestCase, TestSuite
+from .exabgp_agent import ExaBGPClient, ExaBGPClientConfiguration, start_exabgp, stop_exabgp
 
 class TestAgent:
     """
@@ -19,19 +20,31 @@ class TestAgent:
     """
     def __init__(self,
                  tcp_client_config: TCPClientConfiguration,
+                 exabgp_client_config: ExaBGPClientConfiguration
                  ):
         """
         Initialize the test agent for the BGP software
         """
         # First-stage initialization
         self.tcp_client_config : TCPClientConfiguration = tcp_client_config
+        self.exabgp_client_config : ExaBGPClientConfiguration = exabgp_client_config
         # Initialize the clients
         self.tcp_client = TCPClient(self.tcp_client_config)
+        self.exabgp_client = ExaBGPClient(self.exabgp_client_config)
+    
+    def test(self):
+        """For debug"""
+        from test_agent.exabgp_agent import ExaBGPClient, ExaBGPClientConfiguration, start_exabgp, stop_exabgp
+        from time import sleep
+        ret = start_exabgp("ns-cli2")
+        sleep(5)
+        stop_exabgp(ret)
 
     def run_single_testcase(self,
                             test_case: TestCase,
                             router_configuration: RouterConfiguration,
-                            dump: bool = True):
+                            dump: bool = True,
+                            test_name: str = "",):
         """
         Run a single testcase.
         """
@@ -39,6 +52,9 @@ class TestAgent:
         router_interface = get_router_interface(router_configuration)
         router_interface.clear_log() # First clear the log.
         router_interface.start_bgp_instance()
+        router_interface.wait_for_log() # Start the clients one by one.
+        self.exabgp_client.start()
+        router_interface.wait_for_log() # Start the clients one by one.
         self.tcp_client.start()
 
         # Send the message one-by-one
@@ -53,19 +69,26 @@ class TestAgent:
                 break
 
         if dump:
-            log_content = router_interface.read_log()
+            from time import sleep
+            sleep(2)
+            bgpd_log_content = router_interface.read_log()
+            exabgp_log_content = self.exabgp_client.read_log()
             router_interface.clear_log()
-            time_str = get_current_time()
-            dump_path = f"{get_repo_root()}/{TESTCASE_DUMP_SINGLE}/{time_str}"
+            # self.exabgp_client.clear_log()
+            test_name = f"{test_name}_{get_current_time()}"
+            dump_path = f"{get_repo_root()}/{TESTCASE_DUMP_SINGLE}/{test_name}"
             assert not directory_exists(dump_path)
             create_dir(dump_path)
-            create_file(f"{dump_path}/bgpd.log", log_content)
+            create_file(f"{dump_path}/bgpd.log", bgpd_log_content)
+            create_file(f"{dump_path}/exabgp.log", exabgp_log_content)
             save_variable_to_file(router_configuration, 
                                   f"{dump_path}/router_conf.pkl")
             save_variable_to_file(test_case, 
                                   f"{dump_path}/test_case.pkl")
         
         self.tcp_client.end()
+        router_interface.wait_for_log() # Shut down the clients one by one.
+        self.exabgp_client.end()
         router_interface.end_bgp_instance()
 
     

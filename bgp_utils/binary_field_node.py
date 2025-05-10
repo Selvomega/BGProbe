@@ -55,6 +55,7 @@ class BinaryFieldNode(ABC):
         # because we may need to concatenate the binary expression of the chidren 
         # to get the binary expression of current BFN.
         self.children : dict[str,BinaryFieldNode] = {}
+        self.children_max_index = -1
         self.parent : BinaryFieldNode = None
 
         ###### For the dependency relations ######
@@ -64,8 +65,10 @@ class BinaryFieldNode(ABC):
         
         # the BFNs whose values decides the value of current BFN.
         self.dependencies : dict[str,BinaryFieldNode] = {}
+        self.dependencies_max_index = -1
         # the BFNs whose values depend on the value of current BFN.
         self.depend_on_me : dict[str,BinaryFieldNode] = {}
+        self.depend_on_me_max_index = -1
 
         ###### For modification ######
 
@@ -189,7 +192,8 @@ class BinaryFieldNode(ABC):
         now_binary_val = self.get_binary_expression()
 
         # return if you should recursively call the `update` function of other BFNs
-        return now_binary_val==previous_binary_val
+        # return True if updated
+        return now_binary_val!=previous_binary_val
 
     def update_depend_on_me(self):
         """
@@ -197,9 +201,7 @@ class BinaryFieldNode(ABC):
         parent node is not included in `depend_on_me`, 
         but is processed in `update_depend_on_me` function. 
         """
-        # print(f"For debug: {self.get_bfn_name()} updating")
         for bfn in self.depend_on_me.values():
-            # print(f"For debug: {bfn}")
             bfn.update()
         if self.parent is not None:
             # print(f"For debug: Calling update of parent {self.parent.get_bfn_name()}")
@@ -258,7 +260,7 @@ class BinaryFieldNode(ABC):
         return self.detached
     
     ########## Manage relationships ##########
-
+    
     def append_child(self, 
                      child: "BinaryFieldNode") -> str:
         """
@@ -268,10 +270,14 @@ class BinaryFieldNode(ABC):
         """
         # Set the parent of children.
         child.set_parent(self)
-        # append the child to the child-dictionary.
-        return smart_append(self.children,
-                            child.get_bfn_name(),
-                            child)
+        # Increase the overall children count.
+        self.children_max_index = self.children_max_index+1
+        # Create new key.
+        new_key = f"{child.get_bfn_name()}_{self.children_max_index}"
+        assert new_key not in self.children
+        # Insert.
+        self.children[new_key] = child
+        return new_key
 
     def remove_child(self, child_key: str):
         """Remove a child with given key."""
@@ -295,9 +301,14 @@ class BinaryFieldNode(ABC):
         Append a dependency to `self.dependencies`.
         Return the key of the dependency.
         """
-        return smart_append(self.dependencies,
-                            dependency.get_bfn_name(),
-                            dependency)
+        # Increase the overall dependencies count.
+        self.dependencies_max_index = self.dependencies_max_index+1
+        # Create new key.
+        new_key = f"{dependency.get_bfn_name()}_{self.dependencies_max_index}"
+        assert new_key not in self.dependencies
+        # Insert.
+        self.dependencies[new_key] = dependency
+        return new_key
     
     def remove_dependency(self, dependency_key: str):
         """Remove a dependency with given key."""
@@ -312,9 +323,14 @@ class BinaryFieldNode(ABC):
         Append a depend-on-me to `self.depend_on_me`.
         Return the key of the depend-on-me.
         """
-        return smart_append(self.depend_on_me,
-                            depend_on_me.get_bfn_name(),
-                            depend_on_me)
+        # Increase the overall depend-on-me count.
+        self.depend_on_me_max_index = self.depend_on_me_max_index+1
+        # Create new key.
+        new_key = f"{depend_on_me.get_bfn_name()}_{self.depend_on_me_max_index}"
+        assert new_key not in self.depend_on_me
+        # Insert.
+        self.depend_on_me[new_key] = depend_on_me
+        return new_key
 
     def remove_depend_on_me(self, depend_on_me_key: str):
         """Remove a depend-on-me with given key."""

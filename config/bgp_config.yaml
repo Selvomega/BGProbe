@@ -6,3 +6,4 @@ route_refresh: true
 enhanced_route_refresh: true
 extended_message: true
 graceful_restart: false
+mpbgp_ipv4_unicast: true

@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from bgp_utils.bgp_configuration import BGP_Configuration, parse_bgp_config_from_yaml
-from test_agent.exabgp_agent import generate_exabgp_config
+from test_agent.exabgp_agent import generate_exabgp_config, ExaBGPClientConfiguration
 from network_utils.tcp_client import TCPClientConfiguration
 from network_utils.utils import get_ipv4_prefix_parts
 from routing_software_interface.basic_types import RouterConfiguration, Neighbor
@@ -49,11 +49,6 @@ if router_software_asn==tester_client_asn or exabgp_client_asn==tester_client_as
 
 ############### Configure the interfaces ###############
 
-# Configure the TCP client used for the TestAgent
-tcp_client_config = TCPClientConfiguration(host=router_software_ip,
-                                           port=179,
-                                           bind_val=(tester_client_ip, 0),
-                                           netns=tester_client_namespace)
 # Configure the router software
 router_config = RouterConfiguration(
     asn=router_software_asn,
@@ -71,7 +66,14 @@ router_config = RouterConfiguration(
         ),
     ],
 )
+# Configure the TCP client
+tcp_client_config = TCPClientConfiguration(host=router_software_ip,
+                                           port=179,
+                                           bind_val=(tester_client_ip, 0),
+                                           netns=tester_client_namespace)
 # Configure the ExaBGP client
+exabgp_client_config = ExaBGPClientConfiguration(namespace=exabgp_client_namespace)
+# Generate the configuration file for the ExaBGP client
 generate_exabgp_config(peer_ip_addr=router_software_ip,
                        peer_asn=router_software_asn,
                        local_ip_addr=exabgp_client_ip,

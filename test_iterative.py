@@ -2,30 +2,56 @@
 # You only need to select the testcase from `testcase_factory.py` and run here.
 # The routing software is automatically set-up and torn-down.
 
-import sys
-import os
+import sys, os, argparse
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from basic_utils.binary_utils import make_bytes_displayable
+
 from test_agent.test_agent import TestAgent
-
 from test_configuration import *
-from testcase_factory import testcase_1, testcase_2
+from testcase_factory import testcase_suite
 
-########## Initialize the TestAgent ##########
 
-test_agent = TestAgent(
-    tcp_client_config = tcp_client_config,
-)
+def main(test_id: int):
+    """
+    The main function of running the test cases.
+    """
 
-########## Run testcase ##########
+    ########## Load the Testcase ##########
 
-testcase = testcase_2
+    testcase = testcase_suite[test_id]
 
-test_agent.run_single_testcase(
-    test_case=testcase,
-    router_configuration=router_config,
-)
+    ########## Initialize the TestAgent ##########
 
-########## Debug testcase ##########
+    test_agent = TestAgent(
+        tcp_client_config = tcp_client_config,
+        exabgp_client_config = exabgp_client_config,
+    )
 
-# update_msg = testcase[-1]
-# print(make_bytes_displayable(update_msg.get_binary_expression()))
+    ########## Run testcase ##########
+
+    test_agent.run_single_testcase(
+        test_case=testcase,
+        router_configuration=router_config,
+        test_name=f"testcase-{test_id}",
+    )
+
+    ########## Debug testcase ##########
+
+    # update_msg = testcase[-1]
+    # print(make_bytes_displayable(update_msg.get_binary_expression()))
+
+
+if __name__ == "__main__":
+    # Create the arg parser. 
+    parser = argparse.ArgumentParser(description="Deal with the testcase id")
+    parser.add_argument(
+        "number", 
+        type=int, 
+        help=f"Please enter an integer between 1-{len(testcase_suite)-1}",
+        choices=range(1, len(testcase_suite))  # 限制范围1-30
+    )
+    args = parser.parse_args()
+    # Run the main function. 
+    main(test_id=args.number)
+    

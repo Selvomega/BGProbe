@@ -20,6 +20,8 @@ class PathAttributeType(Enum):
     COMMUNITIES = 8
     ORIGINATOR_ID = 9
     CLUSTER_LIST = 10
+    MP_REACH_NLRI = 14
+    MP_UNREACH_NLRI = 15
 
 def calculate_attr_type_property(attr_type: PathAttributeType):
     """
@@ -42,8 +44,10 @@ def calculate_attr_type_property(attr_type: PathAttributeType):
             return True, True
         case PathAttributeType.MULTI_EXIT_DISC | PathAttributeType.ORIGINATOR_ID | PathAttributeType.CLUSTER_LIST:
             return True, False
+        case PathAttributeType.MP_REACH_NLRI | PathAttributeType.MP_UNREACH_NLRI:
+            return True, False
         case _:
-            raise ValueError(f"Path attribute {attribute} undefined!")
+            raise ValueError(f"Path attribute {attr_type} undefined!")
 
 # Attribute Type is a two-octet field that consists of the Attribute Flags octet, 
 # followed by the Attribute Type Code octet.
@@ -82,12 +86,42 @@ class AttrType_BFN(BinaryFieldNode):
         # The remaining for bits of the AttrType Octet.
         self.lower_bits : list[int] = [0,0,0,0]
         self.attr_type_code : int = attr_type.value
+        # This attribute is unused. 
         self.attr_type : PathAttributeType = attr_type
 
     @classmethod
     def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "AttrType_BFN"
+
+    ########## Factory methods: Create an instance of the class ##########
+
+    @classmethod
+    def get_bfn(cls,
+                type_code: int,
+                higher_bits: list[int],
+                lower_bits: list[int] = None) -> "AttrType_BFN":
+        """
+        Get the DIY attribute type BFN.
+        """
+        # Initialize the defaut parameters
+        if lower_bits is None:
+            lower_bits = [0,0,0,0]
+        # First check the format of the input 
+        if len(higher_bits)!=4 or len(lower_bits)!=4:
+            raise ValueError("The length of `higher_bits` and `lower_bits` must be 4!")
+        if any(bit not in (0, 1) for bit in higher_bits) or any(bit not in (0, 1) for bit in lower_bits):
+            raise ValueError("The list element of `higher_bits` and `lower_bits` must be 0 or 1!")
+        # First initialize a random one and then modify.
+        ret : AttrType_BFN = AttrType_BFN()
+        ret.is_optional = higher_bits[0]==1
+        ret.is_transitive = higher_bits[1]==1
+        ret.is_partial = higher_bits[2]==1
+        ret.ext_len = higher_bits[3]==1
+        ret.lower_bits = lower_bits
+        ret.attr_type_code = type_code
+        # Return 
+        return ret
 
     ########## Get binary info ##########
 
@@ -329,6 +363,11 @@ class BaseAttr_BFN(BinaryFieldNode):
         """
         bfn : AttrValue_BFN = self.children[self.attr_value_key]
         bfn.set_bval(attr_val)
+    
+    def set_attr_type_lower_bits(self,lower_bits: list[int]):
+        """Set the lower 4 bits of the attribute type flag field."""
+        bfn: AttrType_BFN = self.children[self.attr_type_key]
+        bfn.set_lower_bits(lower_bits)
 
     ########## Method for selecting mutation ##########
 

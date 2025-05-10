@@ -63,7 +63,7 @@ class Arbitrary_BFN(BinaryFieldNode):
         BinaryFieldNode.MutationItem(BinaryFieldNode.random_bval,set_value)
     ]
 
-# TODO: implement the get_instance method of `AttrType_BFN`
+# TODO: implement the get_instance method of `ArbitraryAttr_BFN`
 
 class ArbitraryAttr_BFN(BaseAttr_BFN):
     """

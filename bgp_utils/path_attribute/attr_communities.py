@@ -1,4 +1,4 @@
-from ..basic_bfn_types import BinaryFieldNode
+from ..basic_bfn_types import BinaryFieldNode, BinaryFieldList_BFN
 from .attr_base import AttrType_BFN, AttrLength_BFN, AttrValue_BFN, BaseAttr_BFN, PathAttributeType
 from basic_utils.binary_utils import num2bytes, bytes2num
 from enum import Enum
@@ -10,7 +10,7 @@ def compose_communities_value(asn:int,operation:int) -> bytes:
     """
     Compose the communities attribute value.
     """
-    return num2bytes(asn,4) + num2bytes(operation,4)
+    return num2bytes(asn,2) + num2bytes(operation,2)
 
 def decompose_communities_value(communities_val: bytes) -> tuple[int,int]:
     """
@@ -28,21 +28,19 @@ class WellKnownCommunities(Enum):
     NO_ADVERTISE = b'\xFF\xFF\xFF\x02'
     NO_EXPORT_SUBCONFED = b'\xFF\xFF\xFF\x03'
 
-class Communities_BFN(AttrValue_BFN):
-    """
-    Value of BGP COMMUNITIES (MED) attribute.
-    """
+class SingleCommunity_BFN(BinaryFieldNode):
+    """Single BGP Community."""
     def __init__(self,
                  asn: int,
                  operation: int):
-        """Iitialize the BGP COMMUNITIES value."""
+        """Iitialize the single BGP COMMUNITIES value."""
         
         ###### Basic attributes ######
 
         super().__init__()
 
         ###### Set the weights ######
-        self.weights = np.ones(len(Communities_BFN.mutation_set))
+        self.weights = np.ones(len(SingleCommunity_BFN.mutation_set))
         self.weights /= np.sum(self.weights)
 
         ###### special attributes ######
@@ -53,7 +51,7 @@ class Communities_BFN(AttrValue_BFN):
     @classmethod
     def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
-        return "Communities_BFN"
+        return "SingleCommunity_BFN"
 
     ########## Get binary info ##########
 
@@ -76,21 +74,21 @@ class Communities_BFN(AttrValue_BFN):
 
     def random_asn(self) -> int:
         """
-        Return a random ASN for the COMMUNITIES attribute.
+        Return a random ASN for the single community.
         """
         byte_seq = random.randbytes(2)
         return bytes2num(byte_seq)
     
     def random_operation(self) -> int:
         """
-        Return a random operation for the COMMUNITIES attribute.
+        Return a random operation for the single community.
         """
         byte_seq = random.randbytes(2)
         return bytes2num(byte_seq)
     
     def random_valid_communities(self) -> WellKnownCommunities:
         """
-        Return a random ORIGIN attribute type.
+        Return a random well-known community value.
         """
         valid_communities = [
             member for member in WellKnownCommunities
@@ -147,19 +145,37 @@ class Communities_BFN(AttrValue_BFN):
         )
     ]
 
+class Communities_BFN(BinaryFieldList_BFN):
+    """
+    Value of BGP COMMUNITIES attribute.
+    """
+    def __init__(self,
+                 single_community_list: list[SingleCommunity_BFN]):
+        """Iitialize the BGP COMMUNITIES value."""
+        
+        ###### Basic attributes ######
+
+        super().__init__(bfn_list=single_community_list,
+                         list_element_name=SingleCommunity_BFN.get_bfn_name())
+
+        ###### Set the weights ######
+        self.weights = np.ones(len(Communities_BFN.mutation_set))
+        self.weights /= np.sum(self.weights)
+
 class CommunitiesAttr_BFN(BaseAttr_BFN):
     """
     BGP path attribute COMMUNITIES.
     """    
     def __init__(self, 
-                 attr_value_bfn: Communities_BFN):
+                 attr_value_bfn: Communities_BFN,
+                 ext_len: bool = False):
         """Initialize the BGP COMMUNITIES path attribute."""
 
         ###### Basic attributes ######
 
-        super().__init__(attr_type_bfn=AttrType_BFN(PathAttributeType.COMMUNITIES),
+        super().__init__(attr_type_bfn=AttrType_BFN(PathAttributeType.COMMUNITIES, ext_len=ext_len),
                          attr_len_bfn=AttrLength_BFN(length_val=4),
-                         attr_value_bfn=attr_value_bfn)
+                         attr_value_bfn=attr_value_bfn,)
 
         ###### Set the weights ######
         self.weights = np.ones(len(CommunitiesAttr_BFN.mutation_set))
@@ -169,6 +185,21 @@ class CommunitiesAttr_BFN(BaseAttr_BFN):
     def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "CommunitiesAttr_BFN"
+
+    ########## Factory methods: Create an instance of the class ##########
+
+    @classmethod
+    def get_bfn(cls, community_list: list) -> "CommunitiesAttr_BFN":
+        """Get the CommunitiesAttr_BFN from the list of community ASN and operation values."""
+        community_bfn_list: list[SingleCommunity_BFN] = []
+        for asn, operation in community_list:
+            community_bfn_list.append(SingleCommunity_BFN(asn, operation))
+        attr_value_bfn = Communities_BFN(single_community_list=community_bfn_list)
+        ext_len = attr_value_bfn.get_binary_length()>255
+        return CommunitiesAttr_BFN(
+            attr_value_bfn=attr_value_bfn,
+            ext_len=ext_len
+        )
 
     ########## Get binary info ##########
 
@@ -186,13 +217,14 @@ class CommunitiesAttr_BFN(BaseAttr_BFN):
 
     # The following methods are recursively calling set-function of childrens, 
     # so there is no need to use `set_function_decorator`
-
-    def set_communities(self,communities: bytes):
-        """
-        Set the COMMUNITIES attribute value.
-        """
-        bfn: Communities_BFN = self.children[self.attr_value_key]
-        bfn.set_communities(communities)
+    
+    # TODO: Modify the mutation methods heres
+    # def set_communities(self,communities: bytes):
+    #     """
+    #     Set the COMMUNITIES attribute value.
+    #     """
+    #     bfn: Communities_BFN = self.children[self.attr_value_key]
+    #     bfn.set_communities(communities)
 
     ########## Method for selecting mutation ##########
 

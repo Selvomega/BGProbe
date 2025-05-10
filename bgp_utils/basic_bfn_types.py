@@ -697,3 +697,74 @@ class BinaryFieldList_BFN(BinaryFieldNode):
 
     # Overwrite the father class' mutation_set
     mutation_set = BinaryFieldNode.mutation_set
+
+class Reserved_BFN(BinaryFieldNode):
+    """
+    Reserved field BFN.
+    """
+    def __init__(self,
+                 reserved_val: bytes = None):
+        """Initialize the reserved BFN"""
+
+        ###### Redefine default input parameters to avoid shallow-copy ######
+
+        if reserved_val is None:
+            reserved_val = b'\x00'
+        
+        ###### Basic attributes ######
+
+        super().__init__()
+
+        ###### Set the weights ######
+        self.weights = np.ones(len(Reserved_BFN.mutation_set))
+        self.weights /= np.sum(self.weights)
+
+        ###### special attributes ######
+
+        self.reserved_val : bytes = reserved_val
+    
+    @classmethod
+    def get_bfn_name(cls) -> str:
+        """Get the name of the BFN."""
+        return "Reserved_BFN"
+
+    ########## Get binary info ##########
+
+    def get_binary_expression_inner(self) -> bytes:
+        """Get binary expression."""
+        return self.reserved_val
+    
+    ########## Update according to dependencies ##########
+    
+    def update_on_dependencies_inner(self):
+        """
+        Update the current BFN according to its dependencies.
+        This BFN do not have dependencies.
+        """
+        # You should not raise error because of `attach` function
+        return
+
+    ########## Methods for generating random mutation ##########
+    
+    def random_reserved_val(self) -> bytes:
+        """
+        Return a random reserved BFN value.
+        The length of the newly generated value is still the same as the previous one
+        """
+        return random.randbytes(len(self.reserved_val))
+    
+    ########## Methods for applying mutation ##########
+
+    @BinaryFieldNode.set_function_decorator
+    def set_reserved_val(self,reserved_val: bytes):
+        """
+        Set the reserved value.
+        """
+        self.reserved_val = reserved_val
+    
+    ########## Method for selecting mutation ##########
+
+    # Overwrite the father class' mutation_set
+    mutation_set = BinaryFieldNode.mutation_set + [
+        BinaryFieldNode.MutationItem(random_reserved_val,set_reserved_val)
+    ]

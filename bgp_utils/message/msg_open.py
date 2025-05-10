@@ -20,7 +20,7 @@ class OptParmValue(Enum):
     Some ready-to-use optional parameter values.
     """
     UNDEFINED = b'\xff\xff'
-    MP_BGP_IPV4 = b'\x01\x04\x00\x01\x00\x01'
+    MP_BGP_IPV4_UNICAST = b'\x01\x04\x00\x01\x00\x01'
     ROUTE_REFRESH = b'\x02\x00'
     ENHANCED_ROUTE_REFRESH = b'\x46\x00'
     GRACEFUL_RESTART = b'\x40\x00'
@@ -632,7 +632,8 @@ class OpenMessage_BFN(BaseMessage_BFN):
             OpenOptParm_BFN.get_capability_bfn(OptParmValue.ROUTE_REFRESH),
             OpenOptParm_BFN.get_capability_bfn(OptParmValue.ENHANCED_ROUTE_REFRESH),
             OpenOptParm_BFN.get_capability_bfn(OptParmValue.EXTENDED_MESSAGE),
-            OpenOptParm_BFN.get_capability_bfn(OptParmValue.GRACEFUL_RESTART)
+            OpenOptParm_BFN.get_capability_bfn(OptParmValue.GRACEFUL_RESTART),
+            OpenOptParm_BFN.get_capability_bfn(OptParmValue.MP_BGP_IPV4_UNICAST)
         ]
         selection_list = [
             bgp_config.route_refresh,

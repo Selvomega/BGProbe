@@ -44,7 +44,6 @@ class PathSegmentType_BFN(BinaryFieldNode):
 
     def get_binary_expression_inner(self):
         """Get binary expression."""
-        # Concatenate the children's binary expressions.
         return num2bytes(self.path_segment_type.value,1)
 
     ########## Update according to dependencies ##########
@@ -73,7 +72,7 @@ class PathSegmentType_BFN(BinaryFieldNode):
     @BinaryFieldNode.set_function_decorator
     def set_path_segment_type(self,path_segment_type: PathSegementType):
         """
-        Set the ORIGIN attribute type.
+        Set the path segment type.
         """
         self.path_segment_type = path_segment_type
     
@@ -334,7 +333,8 @@ class ASPathAttr_BFN(BaseAttr_BFN):
     """
     def __init__(self, 
                  attr_value_bfn: ASPath_BFN, 
-                 attr_len_bfn: AttrLength_BFN = None):
+                 attr_len_bfn: AttrLength_BFN = None,
+                 ext_len: bool = False):
         """Initialize the BGP AS_PATH path attribute"""
 
         ###### Redefine default input parameters to avoid shallow-copy ######
@@ -344,7 +344,7 @@ class ASPathAttr_BFN(BaseAttr_BFN):
 
         ###### Basic attributes ######
 
-        super().__init__(attr_type_bfn=AttrType_BFN(PathAttributeType.AS_PATH),
+        super().__init__(attr_type_bfn=AttrType_BFN(PathAttributeType.AS_PATH, ext_len=ext_len),
                          attr_len_bfn=attr_len_bfn,
                          attr_value_bfn=attr_value_bfn)
 
@@ -356,6 +356,28 @@ class ASPathAttr_BFN(BaseAttr_BFN):
     def get_bfn_name(cls) -> str:
         """Get the name of the BFN."""
         return "ASPathAttr_BFN"
+
+    ########## Factory methods: Create an instance of the class ##########
+
+    @classmethod
+    def get_bfn(cls,
+                as_path,
+                partition_segments: bool = True) -> "ASPathAttr_BFN":
+        """
+        Generate a AS_PATH attribute BFN with the input list of AS path.
+        ------------------------------
+        The input `as_path` can be a list/set or a tuple of lists/sets.
+        Each list represent an AS_SEQUENCE path segment.
+        Each set represent an AS_SET path segment.
+        ------------------------------
+        If `partition_segments` is set to be True, 
+        then the overly long segment (with length over 255) 
+        will be partitioned into pieces
+        ------------------------------
+        Please notice that sequence of AS numbers are reversed.
+        """
+        attr_value_bfn = ASPath_BFN.get_bfn(as_path,partition_segments)
+        return ASPathAttr_BFN(attr_value_bfn)
 
     ########## Get binary info ##########
 

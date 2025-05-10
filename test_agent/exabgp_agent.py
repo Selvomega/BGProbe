@@ -3,9 +3,12 @@ This file defines the agent observing the behavior of the routing software.
 """
 
 from configparser import ConfigParser
-import re, subprocess, os
+from dataclasses import dataclass
+# from basic_utils.file_utils import get_repo_root
+import re, subprocess, os, signal, atexit
 
-EXA_BGP_LOG = "log/exabgp.log"
+# EXA_BGP_LOG = f"{get_repo_root()}/log/exabgp.log"
+EXA_BGP_LOG = f"/home/xinpeilin/bgp_test/log/exabgp.log"
 
 # This function is currently unused.
 def parse_exabgp_config(file_path):
@@ -74,24 +77,124 @@ def generate_exabgp_config(peer_ip_addr: str,
     with open(output_file, "w") as f:
         f.write("\n".join(config_lines))
 
-def start_exabgp(namespace: str,
-                 ):
+@dataclass
+class ExaBGPClientConfiguration:
+    """
+    This class is used to configure the ExaBGP client.
+    """
+    # the namespace used by the ExaBGP client
+    namespace : str
+
+class ExaBGPClient:
+    """
+    The ExaBGP client can be used for setting up BGP connections.
+    You must use `ExaBGPClientConfiguration` to initialize.
+    """
+    def __init__(self, configuration : ExaBGPClientConfiguration):
+        self.configuration = configuration
+        self.process = None
+
+    def start(self):
+        """
+        Initialize the ExaBGP client using the coniguration file.
+        """
+        exabgp_path = subprocess.run(
+            "which exabgp", 
+            shell=True,
+            stdout=subprocess.PIPE, 
+            text=True
+        ).stdout.strip()
+
+        site_package_path = subprocess.run(
+            "python3 -m site --user-site",
+            shell=True,
+            stdout=subprocess.PIPE, 
+            text=True
+        ).stdout.strip()
+        if site_package_path.startswith("/root"):
+            # You should replace this place with your own user home
+            site_package_path = site_package_path.replace("/root", "/home/xinpeilin", 1)
+
+        os.system(f"sudo rm {EXA_BGP_LOG}")
+        process = subprocess.Popen(
+            f"sudo ip netns exec {self.configuration.namespace} env PYTHONPATH={site_package_path} {exabgp_path} config/exabgp.conf --debug > {EXA_BGP_LOG}",
+            shell=True,
+            stdout=subprocess.PIPE,
+            preexec_fn=os.setsid
+        )
+        self.process = process
+
+    def end(self):
+        """
+        Shut down the ExaBGP client
+        """
+        if self.process is not None:
+            os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+        self.process = None
+    
+    def read_log(self):
+        """
+        Read the content from the ExaBGP client's log.
+        """
+        with open(EXA_BGP_LOG, 'r') as file:
+            content = file.read()
+        return content
+
+    def clear_log(self):
+        """
+        Clear the content from the ExaBGP client's log.
+        """
+        with open(EXA_BGP_LOG, 'w') as file:
+            file.write('')
+        return
+
+    def __del__(self):
+        """
+        Destructor to ensure proper cleanup
+        """
+        os.system("sudo pkill -f exabgp")
+
+#################### Deprecated ####################
+
+def start_exabgp(namespace: str):
     """
     Start the ExaBGP client using the configuration file.
     """
 
-    exabgp_path = subprocess.run(["which", "exabgp"], stdout=subprocess.PIPE, text=True).stdout.strip()
-    site_package_path = subprocess.run(
-        "pip3 show exabgp | grep Location",
+    exabgp_path = subprocess.run(
+            "which exabgp", 
+            shell=True,
+            stdout=subprocess.PIPE, 
+            text=True
+        ).stdout.strip()
+    env = os.environ.copy()
+    # site_package_path = subprocess.run(
+    #     "python3 -m pip show exabgp | grep Location",
+    #     shell=True,
+    #     stdout=subprocess.PIPE, 
+    #     text=True,
+    #     env=env
+    # ).stdout.split("Location:")[1].strip()
+    site_package_path = "/home/xinpeilin/.local/lib/python3.12/site-packages"
+
+    os.system(f"sudo rm {EXA_BGP_LOG}")
+    process = subprocess.Popen(
+        f"sudo ip netns exec {namespace} env PYTHONPATH={site_package_path} {exabgp_path} config/exabgp.conf --debug > {EXA_BGP_LOG}",
         shell=True,
-        stdout=subprocess.PIPE, 
-        text=True
-    ).stdout.split("Location:")[1].strip()
+        stdout=subprocess.PIPE,
+        preexec_fn=os.setsid
+    )
+    atexit.register(stop_exabgp, process)
 
-    os.system(f"sudo ip netns exec {namespace} env PYTHONPATH={site_package_path} {exabgp_path} config/exabgp.conf --debug > {EXA_BGP_LOG}")
+    return process
 
-# TODO: Let the ExaBGP start and hang
-# TODO: Stop ExaBGP function
-# TODO: Place the ExaBGP into the test pipeline
+def stop_exabgp(process):
+    """
+    Shut down the ExaBGP instance.
+    """
+    os.killpg(os.getpgid(process.pid), signal.SIGTERM)
 
-# start_exabgp("ns-cli2")
+# ret = start_exabgp("ns-cli2")
+# from time import sleep
+# sleep(10)
+# stop_exabgp(ret)

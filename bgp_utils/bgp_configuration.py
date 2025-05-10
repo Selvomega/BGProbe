@@ -20,6 +20,7 @@ class BGP_Configuration:
     enhanced_route_refresh: bool = True # If use enhanced route refresh
     extended_message: bool = True # If use extended BGP message
     graceful_restart: bool = True # If use graceful restart
+    mpbgp_ipv4_unicast: bool = False # If use MP-BGP IPv4 unicast.
 
 def parse_bgp_config_from_yaml(file_path: str) -> BGP_Configuration:
     """
@@ -43,4 +44,5 @@ def parse_bgp_config_from_yaml(file_path: str) -> BGP_Configuration:
         enhanced_route_refresh=config_data.get('enhanced_route_refresh', True),
         extended_message=config_data.get('extended_message', True),
         graceful_restart=config_data.get('graceful_restart', True),
+        mpbgp_ipv4_unicast=config_data.get('mpbgp_ipv4_unicast', True),
     )
