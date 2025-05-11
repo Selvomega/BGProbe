@@ -95,6 +95,32 @@ class BaseRouter(ABC):
         """
         return self.router_configuration
 
+    ########## Dump MRT file ##########
+
+    def dump_updates(self, path: str):
+        """
+        Dump only BGP updates messages to `path`.
+        """
+        raise NotImplementedError()
+
+    def dump_routing_table(self, path: str):
+        """
+        Dump whole BGP routing table to `path`.
+        """
+        raise NotImplementedError()
+
+    def stop_dump_updates(self, path: str):
+        """
+        Stop `dump_updates`.
+        """
+        raise NotImplementedError()
+
+    def stop_dump_routing_table(self, path: str):
+        """
+        Stop `dump_routing_table`.
+        """
+        raise NotImplementedError()
+
     ########## Log manipulation ##########
 
     @abstractmethod

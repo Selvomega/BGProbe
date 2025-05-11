@@ -38,7 +38,7 @@ def main(test_id: int):
 
     ########## Debug testcase ##########
 
-    # update_msg = testcase[-1]
+    # update_msg = testcase[0]
     # print(make_bytes_displayable(update_msg.get_binary_expression()))
 
 

@@ -89,3 +89,11 @@ def make_bytes_displayable(byte_seq: bytes) -> str:
     Convert the bytes to a displayable version.
     """
     return '\\x' + '\\x'.join(f'{b:02x}' for b in byte_seq)
+
+def mrt_to_binary(file_path) -> bytes:
+    """
+    Read the MRT file into a byte sequence.
+    """
+    with open(file_path, 'rb') as file:
+        file_bytes = file.read()
+    return file_bytes

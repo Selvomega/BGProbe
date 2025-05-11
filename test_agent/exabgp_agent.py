@@ -4,11 +4,10 @@ This file defines the agent observing the behavior of the routing software.
 
 from configparser import ConfigParser
 from dataclasses import dataclass
-# from basic_utils.file_utils import get_repo_root
+from basic_utils.const import REPO_ROOT_PATH
 import re, subprocess, os, signal, atexit
 
-# EXA_BGP_LOG = f"{get_repo_root()}/log/exabgp.log"
-EXA_BGP_LOG = f"/home/xinpeilin/bgp_test/log/exabgp.log"
+EXA_BGP_LOG = f"{REPO_ROOT_PATH}/log/exabgp.log"
 
 # This function is currently unused.
 def parse_exabgp_config(file_path):

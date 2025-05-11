@@ -3,9 +3,11 @@ This file defines the agent used to advertise malformed messages.
 """
 
 from types import FunctionType
+from time import sleep
 from basic_utils.serialize_utils import save_variable_to_file
 from basic_utils.time_utils import get_current_time
 from basic_utils.file_utils import *
+from basic_utils.const import *
 from bgp_utils.message import MessageType
 from network_utils.tcp_client import TCPClient, TCPClientConfiguration
 from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType
@@ -40,6 +42,7 @@ class TestAgent:
         sleep(5)
         stop_exabgp(ret)
 
+    # TODO: Deal with the dumping hear: Can we make it a callback function?
     def run_single_testcase(self,
                             test_case: TestCase,
                             router_configuration: RouterConfiguration,
@@ -51,6 +54,18 @@ class TestAgent:
         # Start the routing software and the TCP client.
         router_interface = get_router_interface(router_configuration)
         router_interface.clear_log() # First clear the log.
+
+        if dump:
+            # Prepare for dumping 
+            test_name = f"{test_name}_{get_current_time()}"
+            dump_path = f"{REPO_ROOT_PATH}/{TESTCASE_DUMP_SINGLE}/{test_name}"
+            assert not directory_exists(dump_path)
+            # Create the dump directory
+            create_dir(dump_path)
+            # Start to dump UPDATE messages
+            # Dumping UPDATEs is progressive
+            router_interface.dump_updates(f"{dump_path}/updates.mrt")
+
         router_interface.start_bgp_instance()
         router_interface.wait_for_log() # Start the clients one by one.
         self.exabgp_client.start()
@@ -69,22 +84,28 @@ class TestAgent:
                 break
 
         if dump:
-            from time import sleep
+            # Wait for the ExaBGP log to be ready
             sleep(2)
+            # Dump the log for bgpd and exabgp
             bgpd_log_content = router_interface.read_log()
             exabgp_log_content = self.exabgp_client.read_log()
             router_interface.clear_log()
-            # self.exabgp_client.clear_log()
-            test_name = f"{test_name}_{get_current_time()}"
-            dump_path = f"{get_repo_root()}/{TESTCASE_DUMP_SINGLE}/{test_name}"
-            assert not directory_exists(dump_path)
-            create_dir(dump_path)
             create_file(f"{dump_path}/bgpd.log", bgpd_log_content)
             create_file(f"{dump_path}/exabgp.log", exabgp_log_content)
+            # Dumping RIB hear
+            # Dumping RIB is like taking a snapshot, 
+            # so you should only dump after exchanging the messages
+            router_interface.dump_routing_table(f"{dump_path}/routes.mrt")
+            # Stop router software dumping
+            router_interface.stop_dump_updates(f"{dump_path}/updates.mrt")
+            router_interface.stop_dump_routing_table(f"{dump_path}/routes.mrt")
+            # Dump the testcase setting
             save_variable_to_file(router_configuration, 
                                   f"{dump_path}/router_conf.pkl")
             save_variable_to_file(test_case, 
                                   f"{dump_path}/test_case.pkl")
+            # Allow user to access the dumped directory
+            # allow_user_access(dump_path)
         
         self.tcp_client.end()
         router_interface.wait_for_log() # Shut down the clients one by one.
@@ -108,7 +129,7 @@ class TestAgent:
 
         test_name : str = test_suite.test_suite_name
         test_name = get_current_time() if test_name is None else test_name
-        dump_dir_path = f"{get_repo_root()}/{TESTCASE_DUMP_BATCHED}/{test_name}"
+        dump_dir_path = f"{REPO_ROOT_PATH}/{TESTCASE_DUMP_BATCHED}/{test_name}"
         assert not directory_exists(dump_dir_path)
         create_dir(dump_dir_path)
         save_variable_to_file(check_func,
@@ -155,7 +176,7 @@ class TestAgent:
         Save the test setting causing crash.
         """
         time_str = get_current_time()
-        crash_dump_path = f"{get_repo_root()}/{TESTCASE_DUMP_CRASHED}"
+        crash_dump_path = f"{REPO_ROOT_PATH}/{TESTCASE_DUMP_CRASHED}"
         save_variable_to_file(router_config,
                               f"{crash_dump_path}/{time_str}.pkl")
         save_variable_to_file(test_case,

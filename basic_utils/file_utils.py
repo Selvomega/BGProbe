@@ -1,24 +1,9 @@
+from .const import USER_NAME
 import os
 
-REPO_NAME = 'bgp_test'
 TESTCASE_DUMP_SINGLE = 'log/test_single'
 TESTCASE_DUMP_BATCHED = 'log/test_batched'
 TESTCASE_DUMP_CRASHED = 'log/test_crashed'
-
-def get_repo_root() -> str:
-    """
-    Call in any place inside the repo,
-    and return the absolute path of `.../bgp_test/`
-    """
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    while True:
-        if os.path.basename(current_dir) == REPO_NAME:
-            return current_dir
-        parent_dir = os.path.dirname(current_dir)
-        if parent_dir == current_dir:
-            break
-        current_dir = parent_dir
-    raise FileNotFoundError(f"Directory {REPO_NAME} NOT FOUND")
 
 def directory_exists(dir_path: str) -> bool:
     """Check if the directory exists."""
@@ -36,3 +21,9 @@ def create_file(file_path: str, content: str):
     """Create a file with given content."""
     with open(file_path, 'w') as file:
         file.write(content)
+
+def allow_user_access(path: str):
+    """
+    Give user access to given path.
+    """
+    os.system(f"sudo setfacl -d -R -m u:{USER_NAME}:rwx {path}")

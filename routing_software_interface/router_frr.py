@@ -168,6 +168,32 @@ class FRRRouter(BaseRouter):
                 f"no neighbor {neighbor.peer_ip} remote-as {neighbor.peer_asn}"
             ]
             self.execute_commands_in_router_level(commands)
+        
+    ########## Dump MRT file ##########
+
+    def dump_updates(self, path: str):
+        """
+        Dump only BGP updates messages to `path`.
+        """
+        self.execute_commands_in_config_level([f"dump bgp updates {path}"])
+
+    def dump_routing_table(self, path: str):
+        """
+        Dump owhole BGP routing table to `path`.
+        """
+        self.execute_commands_in_config_level([f"dump bgp routes-mrt {path}"])
+    
+    def stop_dump_updates(self, path: str):
+        """
+        Stop `dump_updates`.
+        """
+        self.execute_commands_in_config_level(["no dump bgp updates"])
+
+    def stop_dump_routing_table(self, path: str):
+        """
+        Stop `dump_routing_table`.
+        """
+        self.execute_commands_in_config_level(["no dump bgp routes-mrt"])
 
     ########## Log manipulation ##########
 
