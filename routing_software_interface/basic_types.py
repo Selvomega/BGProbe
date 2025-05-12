@@ -10,6 +10,7 @@ class RouterSoftwareType(Enum):
     """
     UNDEFINED = -1
     FRR = 1
+    BIRD = 2
 
 @dataclass
 class Neighbor:

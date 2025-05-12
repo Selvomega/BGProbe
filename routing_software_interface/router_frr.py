@@ -1,11 +1,13 @@
 """
-The frr router. 
+The FRR router. 
 """
 
 from .basic_types import *
 from .router_base import BaseRouter
 from time import sleep
 import subprocess
+
+FRR_LOG = "/var/log/frr/bgpd.log"
 
 class FRRRouter(BaseRouter):
     """
@@ -179,17 +181,17 @@ class FRRRouter(BaseRouter):
 
     def dump_routing_table(self, path: str):
         """
-        Dump owhole BGP routing table to `path`.
+        Dump the whole BGP routing table to `path`.
         """
         self.execute_commands_in_config_level([f"dump bgp routes-mrt {path}"])
     
-    def stop_dump_updates(self, path: str):
+    def stop_dump_updates(self):
         """
         Stop `dump_updates`.
         """
         self.execute_commands_in_config_level(["no dump bgp updates"])
 
-    def stop_dump_routing_table(self, path: str):
+    def stop_dump_routing_table(self):
         """
         Stop `dump_routing_table`.
         """
@@ -202,14 +204,14 @@ class FRRRouter(BaseRouter):
         Read (all) the content from the routing softwares' log.
         Must execute with sudo-command.
         """
-        return super().read_log("/var/log/frr/bgpd.log")
+        return super().read_log(FRR_LOG)
 
     def clear_log(self):
         """
         Clear the content from the routing softwares' log.
         Must execute with sudo-command.
         """
-        super().clear_log("/var/log/frr/bgpd.log")
+        super().clear_log(FRR_LOG)
 
     ########## Crash management ##########
 

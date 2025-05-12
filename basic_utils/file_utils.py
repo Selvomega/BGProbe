@@ -26,4 +26,5 @@ def allow_user_access(path: str):
     """
     Give user access to given path.
     """
+    os.system(f"sudo setfacl -R -m u:{USER_NAME}:rwx {path}")
     os.system(f"sudo setfacl -d -R -m u:{USER_NAME}:rwx {path}")

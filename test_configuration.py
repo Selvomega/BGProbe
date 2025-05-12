@@ -49,23 +49,6 @@ if router_software_asn==tester_client_asn or exabgp_client_asn==tester_client_as
 
 ############### Configure the interfaces ###############
 
-# Configure the router software
-router_config = RouterConfiguration(
-    asn=router_software_asn,
-    router_id=router_software_ip,
-    neighbors=[
-        Neighbor(
-            peer_ip=tester_client_ip,
-            peer_asn=tester_client_asn,
-            local_source=router_software["veth"]
-        ),
-        Neighbor(
-            peer_ip=exabgp_client_ip,
-            peer_asn=exabgp_client_asn,
-            local_source=router_software["veth"]
-        ),
-    ],
-)
 # Configure the TCP client
 tcp_client_config = TCPClientConfiguration(host=router_software_ip,
                                            port=179,

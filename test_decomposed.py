@@ -54,5 +54,5 @@ tcp_client.start()
 for message in testcase:
     tcp_client.send(message.get_binary_expression())
     sleep(0.5)
-sleep(20)
+sleep(40)
 tcp_client.end()

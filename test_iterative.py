@@ -6,6 +6,7 @@ import sys, os, argparse
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from basic_utils.binary_utils import make_bytes_displayable
+from routing_software_interface.basic_types import RouterSoftwareType
 
 from test_agent.test_agent import TestAgent
 from test_configuration import *
@@ -16,6 +17,26 @@ def main(test_id: int):
     """
     The main function of running the test cases.
     """
+
+    ########## Configure the Router Software ##########
+
+    router_config = RouterConfiguration(
+        asn=router_software_asn,
+        router_id=router_software_ip,
+        neighbors=[
+            Neighbor(
+                peer_ip=tester_client_ip,
+                peer_asn=tester_client_asn,
+                local_source=router_software["veth"]
+            ),
+            Neighbor(
+                peer_ip=exabgp_client_ip,
+                peer_asn=exabgp_client_asn,
+                local_source=router_software["veth"]
+            ),
+        ],
+        router_type=RouterSoftwareType.BIRD
+    )
 
     ########## Load the Testcase ##########
 
