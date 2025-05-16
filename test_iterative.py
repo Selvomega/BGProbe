@@ -12,6 +12,7 @@ from test_agent.test_agent import TestAgent
 from test_configuration import *
 from testcase_factory import testcase_suite
 
+router_type = RouterSoftwareType.BIRD
 
 def main(test_id: int):
     """
@@ -35,7 +36,7 @@ def main(test_id: int):
                 local_source=router_software["veth"]
             ),
         ],
-        router_type=RouterSoftwareType.FRR
+        router_type=router_type
     )
 
     ########## Load the Testcase ##########

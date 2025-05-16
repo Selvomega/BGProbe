@@ -49,6 +49,9 @@ protocol bgp peer{peer_count} {{
   mrtdump {{messages}};
   local as {self.router_configuration.asn};
   neighbor {neighbor.peer_ip} as {neighbor.peer_asn};
+  # enforce first as;
+  enable extended messages on;
+  interpret communities on;
   passive yes;
   import all;
   export all;
