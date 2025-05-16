@@ -51,8 +51,11 @@ testcase = testcase_2
 # Run the testcase
 tcp_client = TCPClient(tcp_client_config)
 tcp_client.start()
+print("here")
 for message in testcase:
+    print("MMMM")
     tcp_client.send(message.get_binary_expression())
+    print("EEEE")
     sleep(0.5)
 sleep(40)
 tcp_client.end()

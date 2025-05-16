@@ -146,7 +146,7 @@ update_message_bfn = UpdateMessage_BFN.get_bfn(
     withdrawn_routes=[],
     aspath=[tester_client_asn],
     next_hop=tester_client_ip,
-    nlri=["59.66.130.0/24"] # NO NLRI attribute.
+    nlri=[] # NO NLRI attribute.
 )
 update_message = UpdateMessage(update_message_bfn)
 
@@ -1385,36 +1385,6 @@ testcase_46 = TestCase([open_message, keepalive_message, update_message])
 
 ############### testcase 47 ###############
 
-"""
-Testcase: WELL-KNOWN attribute with partial bit 1.
-Violating RFC 4271: "For well-known attributes and for optional non-transitive attributes, the Partial bit MUST be set to 0."
-"""
-
-# Vanilla OPEN and KEEPALIVE message
-open_message = deepcopy(vanilla_open_message)
-keepalive_message = deepcopy(vanilla_keepalive_message)
-
-attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
-attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
-attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
-attr_nexthop.set_is_partial(True) # WELL-KNOWN attribute with partial bit 1!
-# UPDATE message
-update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
-    withdrawn_routes=[],
-    nlri=["59.66.130.0/24"],
-    attr_bfn_list=[
-        attr_origin,
-        attr_aspath,
-        attr_nexthop,
-    ]
-)
-update_message = UpdateMessage(update_message_bfn)
-
-# testcase
-testcase_47 = TestCase([open_message, keepalive_message, update_message])
-
-############### testcase 48 ###############
-
 """Testcase: UPDATE message with only an incomplete Marker field."""
 
 # Vanilla OPEN and KEEPALIVE message
@@ -1426,9 +1396,9 @@ update_message_bfn = UpdateMessage_BFN.get_bfn_diy_bval(b"\xff"*7)
 update_message = UpdateMessage(update_message_bfn)
 
 # testcase
-testcase_48 = TestCase([open_message, keepalive_message, update_message])
+testcase_47 = TestCase([open_message, keepalive_message, update_message])
 
-############### testcase 49 ###############
+############### testcase 48 ###############
 
 """Testcase: UPDATE message with a large length and no content."""
 
@@ -1443,9 +1413,9 @@ update_message_bfn.set_message_content_bval(b"") # and set the message content i
 update_message = UpdateMessage(update_message_bfn)
 
 # testcase
-testcase_49 = TestCase([open_message, keepalive_message, update_message])
+testcase_48 = TestCase([open_message, keepalive_message, update_message])
 
-############### testcase 50 ###############
+############### testcase 49 ###############
 
 """
 BGP Update with the overall attribute field length exceeding the message length.
@@ -1466,9 +1436,9 @@ update_message_bfn.set_path_attr_len(200) # overall attribute length exceeding t
 update_message = UpdateMessage(update_message_bfn)
 
 # testcase
-testcase_50 = TestCase([open_message, keepalive_message, update_message])
+testcase_49 = TestCase([open_message, keepalive_message, update_message])
 
-############### testcase 51 ###############
+############### testcase 50 ###############
 
 """
 Testcase: UPDATE message with one particular attribute field length exceeding the message length.
@@ -1495,7 +1465,98 @@ update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
 update_message = UpdateMessage(update_message_bfn)
 
 # testcase
+testcase_50 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 51 ###############
+
+"""
+Testcase: WELL-KNOWN attribute with partial bit 1: ORIGIN
+Violating RFC 4271: "For well-known attributes and for optional non-transitive attributes, the Partial bit MUST be set to 0."
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_origin.set_is_partial(True) # WELL-KNOWN attribute with partial bit 1!
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
 testcase_51 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 52 ###############
+
+"""
+Testcase: WELL-KNOWN attribute with partial bit 1: AS_PATH
+Violating RFC 4271: "For well-known attributes and for optional non-transitive attributes, the Partial bit MUST be set to 0."
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_aspath.set_is_partial(True) # WELL-KNOWN attribute with partial bit 1!
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_52 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 53 ###############
+
+"""
+Testcase: WELL-KNOWN attribute with partial bit 1: NEXT_HOP
+Violating RFC 4271: "For well-known attributes and for optional non-transitive attributes, the Partial bit MUST be set to 0."
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_nexthop.set_is_partial(True) # WELL-KNOWN attribute with partial bit 1!
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_53 = TestCase([open_message, keepalive_message, update_message])
+
 
 
 ##############################################
@@ -1555,4 +1616,6 @@ testcase_suite = [
     testcase_49,
     testcase_50,
     testcase_51,
+    testcase_52,
+    testcase_53,
 ]

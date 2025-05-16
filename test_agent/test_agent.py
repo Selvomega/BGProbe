@@ -130,7 +130,7 @@ class TestAgent:
             # For BIRD bgpd, dumping is periodic, we set the period as 1 second.
             router_interface.dump_routing_table(f"{dump_path}/routes.mrt")
             # So we need to sleep longer
-            sleep(1.5)
+            sleep(2)
         else:
             # This should not happen...
             raise ValueError("Unexpected type of the router interface!")
@@ -227,7 +227,10 @@ class TestAgent:
         """
         time_str = get_current_time()
         crash_dump_path = f"{REPO_ROOT_PATH}/{TESTCASE_DUMP_CRASHED}"
+        dump_path = f"{crash_dump_path}/{time_str}"
+        assert not directory_exists(dump_path)
+        create_dir(dump_path)
         save_variable_to_file(router_config,
-                              f"{crash_dump_path}/{time_str}.pkl")
+                              f"{dump_path}/router_config.pkl")
         save_variable_to_file(test_case,
-                              f"{crash_dump_path}/{time_str}.pkl")
+                              f"{dump_path}/testcase.pkl")

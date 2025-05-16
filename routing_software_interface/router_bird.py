@@ -8,13 +8,9 @@ from time import sleep
 import subprocess, re
 
 BIRD_CONF = "/etc/bird/bird.conf"
+BIRD_CONF = "/usr/local/etc/bird.conf"
 BIRD_CONF_MARKER = "###### Configure below ######"
 BIRD_LOG = "/var/log/bird.log"
-
-# TODO's: 
-# 1. modify the dump of MRT file of BIRD router
-# 2. Test if the pipeline can work
-# 3. 
 
 class BIRDRouter(BaseRouter):
     """
@@ -49,12 +45,11 @@ protocol bgp peer{peer_count} {{
   mrtdump {{messages}};
   local as {self.router_configuration.asn};
   neighbor {neighbor.peer_ip} as {neighbor.peer_asn};
-  # enforce first as;
+  enforce first as;
   enable extended messages on;
   interpret communities on;
   passive yes;
-  import all;
-  export all;
+  ipv4 {{ import all; export all; }};
 }}
 """
             neighbor_conf_list.append(neighbor_conf)
@@ -114,7 +109,7 @@ protocol bgp peer{peer_count} {{
         Add the MRT config for dumping the routing table in the BIRD config file.
         """
         new_config = f'''protocol mrt {{
-\ttable "master";
+\ttable "master4";
 \tfilename "{dump_path}";
 \tperiod 1;
 }}
@@ -286,12 +281,32 @@ protocol bgp peer{peer_count} {{
     
     ########## Crash management ##########
 
+    # def if_crashed(self) -> bool:
+    #     """
+    #     Return if the router software has crashed.
+    #     """
+    #     output = subprocess.getoutput("systemctl is-active bird")
+    #     return output!="active"
+    
     def if_crashed(self) -> bool:
         """
         Return if the router software has crashed.
         """
-        output = subprocess.getoutput("systemctl is-active bird")
-        return output!="active"
+        # Get all process
+        ps_output = subprocess.check_output(["ps", "aux"]).decode("utf-8")
+
+        # find bird
+        lines = [line for line in ps_output.split("\n") 
+                if "bird" in line and "grep bird" not in line and line.strip() != ""]
+
+        # Check if there is real BIRD process
+        for line in lines:
+            if re.search(r"bird(\s|$|2)", line):  # match bird or bird2
+                # BIRD is running.
+                return False
+
+        # BIRD is NOT running.
+        return True
 
     def recover_from_crash(self):
         """
@@ -300,7 +315,7 @@ protocol bgp peer{peer_count} {{
         started = not self.if_crashed()
         counter = 0
         while not started:
-            os.system("sudo systemctl start bird")
+            os.system("sudo bird")
             sleep(0.5)
             started = not self.if_crashed()
             counter  = counter + 1
