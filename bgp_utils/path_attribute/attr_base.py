@@ -343,24 +343,48 @@ class BaseAttr_BFN(BinaryFieldNode):
     # The following methods are recursively calling set-function of childrens, 
     # so there is no need to use `set_function_decorator`
 
-    def set_length(self, length_val: int):
-        """
-        Set the length of the Attribute BFN.
-        """
-        bfn : AttrLength_BFN = self.children[self.attr_len_key]
-        bfn.set_length(length_val)
+    def set_is_optional(self,is_optional: bool):
+        """Set if the path attribute is optional or not."""
+        bfn: AttrType_BFN = self.children[self.attr_type_key]
+        bfn.set_is_optional(is_optional)
 
-    def set_message_type(self, attr_type: PathAttributeType):
-        """
-        Set the attribute type of the Attribute BFN.
-        """
+    def set_is_transitive(self,is_transitive: bool):
+        """Set if the path attribute is transitive or not."""
+        bfn: AttrType_BFN = self.children[self.attr_type_key]
+        bfn.set_is_transitive(is_transitive)
+
+    def set_is_partial(self,is_partial: bool):
+        """Set if the path attribute is partial or not."""
+        bfn: AttrType_BFN = self.children[self.attr_type_key]
+        bfn.set_is_partial(is_partial)
+
+    def set_ext_len(self, ext_len: bool):
+        """Set if the path attribute uses extended length field or not."""
+        bfn: AttrType_BFN = self.children[self.attr_type_key]
+        bfn.set_ext_len(ext_len)
+
+    def set_lower_bits(self,lower_bits: list[int]):
+        """Set the lower 4 bits of the attribute type flag field."""
+        bfn: AttrType_BFN = self.children[self.attr_type_key]
+        bfn.set_lower_bits(lower_bits)
+
+    def set_attr_type(self, attr_type: PathAttributeType):
+        """Set the path attribute type."""
         bfn: AttrType_BFN = self.children[self.attr_type_key]
         bfn.set_attr_type(attr_type)
     
+    def set_attr_type_code(self, attr_type_code: int):
+        """Set the path attribute type code."""
+        bfn: AttrType_BFN = self.children[self.attr_type_key]
+        bfn.set_attr_type_code(attr_type_code)
+    
+    def set_length(self, length_val: int):
+        """Set the length of the Attribute BFN."""
+        bfn : AttrLength_BFN = self.children[self.attr_len_key]
+        bfn.set_length(length_val)
+    
     def set_attr_val_bval(self, attr_val: bytes):
-        """
-        Set the attribute value of the Attribute BFN.
-        """
+        """Set the attribute value of the Attribute BFN."""
         bfn : AttrValue_BFN = self.children[self.attr_value_key]
         bfn.set_bval(attr_val)
     

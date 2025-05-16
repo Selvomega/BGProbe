@@ -8,7 +8,7 @@ from bgp_utils.message import OpenMessage_BFN, OpenMessage, KeepAliveMessage_BFN
 from bgp_utils.path_attribute import AttrType_BFN, BaseAttr_BFN, OriginType, Origin_BFN, OriginAttr_BFN, PathSegementType, PathSegmentType_BFN, PathSegmentLength_BFN, PathSegmentValue_BFN, PathSegment_BFN, ASPath_BFN, ASPathAttr_BFN, NextHop_BFN, NextHopAttr_BFN, Communities_BFN, CommunitiesAttr_BFN, MPReachNLRI_BFN, MPReachNLRIAttr_BFN, MPUnreachNLRI_BFN, MPUnreachNLRIAttr_BFN, LOCPREF_BFN, LOCPREFAttr_BFN, Arbitrary_BFN, ArbitraryAttr_BFN
 from bgp_utils.basic_bfn_types import IPv4Prefix_BFN, Length_BFN
 from basic_utils.binary_utils import bytes2num
-from test_agent.test_suite import TestCase
+from test_agent.test_suite import TestCase, Halt
 
 from test_configuration import *
 
@@ -621,7 +621,8 @@ testcase_23 = TestCase([open_message, keepalive_message, update_message])
 
 """
 Testcase: UPDATE message with both NLRI, NEXT_HOP and MP_REACH_NLRI attribute.
-Same prefix in NLRIs, different next-hop (Legal next-hop in NEXT_HOP)
+Same prefix in NLRIs, different next-hop.
+(NEXT_HOP before MP_REACH_NLRI, legal next-hop in NEXT_HOP)
 """
 
 # TODO: How does FRR process MP_REACH_NLRI and NEXT_HOP?
@@ -658,7 +659,8 @@ testcase_24 = TestCase([open_message, keepalive_message, update_message])
 
 """
 Testcase: UPDATE message with both NLRI, NEXT_HOP and MP_REACH_NLRI attribute.
-Same prefix in NLRIs, different next-hop (Legal next-hop in MP_REACH_NLRI)
+Same prefix in NLRIs, different next-hop. 
+(NEXT_HOP before MP_REACH_NLRI, legal next-hop in MP_REACH_NLRI).
 """
 
 # Vanilla OPEN and KEEPALIVE message
@@ -861,9 +863,639 @@ update_message = UpdateMessage(update_message_bfn)
 # testcase
 testcase_31 = TestCase([open_message, keepalive_message, update_message])
 
+############### testcase 32 ###############
 
+"""Vanilla testcase: Advertise a route then withdraw."""
 
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
 
+# UPDATE message 1
+update_message_bfn_1 = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[tester_client_asn],
+    next_hop=tester_client_ip,
+    nlri=["59.66.130.0/24"]
+)
+# UPDATE message 2
+update_message_bfn_2 = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=["59.66.130.0/24"],
+    nlri=[],
+    attr_bfn_list=[]
+)
+update_message_1 = UpdateMessage(update_message_bfn_1)
+update_message_2 = UpdateMessage(update_message_bfn_2)
+
+# testcase
+testcase_32 = TestCase(
+    [open_message, keepalive_message, update_message_1, Halt(), update_message_2]
+)
+
+############### testcase 33 ###############
+
+"""Testcase: Advertise a route then trigger treat-as-withdraw."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message 1
+update_message_bfn_1 = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[tester_client_asn],
+    next_hop=tester_client_ip,
+    nlri=["59.66.130.0/24"]
+)
+# UPDATE message
+update_message_bfn_2 = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+    ] # Lacking NEXT_HOP path attribute, trigger treat-as-withdraw
+)
+update_message_1 = UpdateMessage(update_message_bfn_1)
+update_message_2 = UpdateMessage(update_message_bfn_2)
+
+# testcase
+testcase_33 = TestCase(
+    [open_message, keepalive_message, update_message_1, Halt(), update_message_2]
+)
+
+############### testcase 34 ###############
+
+"""Testcase: Advertise a route with un-discussed path attribute."""
+
+# DIY BGP configuration, leave MP-BGP IPv4 un-used
+diy_bgp_config = BGP_Configuration(
+    asn=BGP_CONFIG.asn,
+    bgp_identifier=BGP_CONFIG.bgp_identifier,
+    hold_time=BGP_CONFIG.hold_time,
+    bgp_version=BGP_CONFIG.bgp_version,
+    route_refresh=BGP_CONFIG.route_refresh,
+    enhanced_route_refresh=BGP_CONFIG.enhanced_route_refresh,
+    extended_message=BGP_CONFIG.extended_message,
+    graceful_restart=BGP_CONFIG.graceful_restart,
+    mpbgp_ipv4_unicast=False
+)
+
+# OPEN message
+open_message_bfn = OpenMessage_BFN.get_bfn(BGP_CONFIG)
+open_message = OpenMessage(open_message_bfn)
+# Vanilla KEEPALIVE message
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_mpreachnlri = MPReachNLRIAttr_BFN.get_ipv4_unicast_bfn(
+    mp_nexthop=tester_client_ip,
+    mp_nlri=["59.66.130.0/24"]
+)
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=[], # NLRI is left empty
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_mpreachnlri
+    ] # MP_REACH_NLRI and no NEXT_HOP
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_34 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 35 ###############
+
+"""Testcase: UPDATE message with unknown WELL-KNOWN path attribute."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_arbitrary = ArbitraryAttr_BFN(
+    attr_type_bfn=AttrType_BFN.get_bfn(
+        type_code=114, # An unknown type
+        higher_bits=[0,1,1,0], # WELL-KNOWN, transitive, partial, no extended length
+    ),
+    attr_value_bfn=Arbitrary_BFN(value=b'\x11\x45\x14\x19')
+) # Unknown path attribute.
+
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+        attr_arbitrary,
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_35 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 36 ###############
+
+"""Testcase: Withdraw with normal path attributes (No NLRI)."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message 1
+update_message_bfn_1 = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[tester_client_asn],
+    next_hop=tester_client_ip,
+    nlri=["59.66.130.0/24"]
+)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+# UPDATE message 2
+update_message_bfn_2 = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=["59.66.130.0/24"],
+    nlri=[],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+    ]
+)
+update_message_1 = UpdateMessage(update_message_bfn_1)
+update_message_2 = UpdateMessage(update_message_bfn_2)
+
+# testcase
+testcase_36 = TestCase(
+    [open_message, keepalive_message, update_message_1, Halt(), update_message_2]
+)
+
+############### testcase 37 ###############
+
+"""Testcase: Withdraw with an unknown OPTIONAL path attribute (No NLRI)."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message 1
+update_message_bfn_1 = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[tester_client_asn],
+    next_hop=tester_client_ip,
+    nlri=["59.66.130.0/24"]
+)
+
+attr_arbitrary = ArbitraryAttr_BFN(
+    attr_type_bfn=AttrType_BFN.get_bfn(
+        type_code=114, # An unknown type
+        higher_bits=[1,1,1,0], # OPTIONAL, transitive, partial, no extended length
+    ),
+    attr_value_bfn=Arbitrary_BFN(value=b'\x11\x45\x14\x19')
+) # Unknown path attribute.
+# UPDATE message 2
+update_message_bfn_2 = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=["59.66.130.0/24"],
+    nlri=[],
+    attr_bfn_list=[
+        attr_arbitrary
+    ]
+)
+update_message_1 = UpdateMessage(update_message_bfn_1)
+update_message_2 = UpdateMessage(update_message_bfn_2)
+
+# testcase
+testcase_37 = TestCase(
+    [open_message, keepalive_message, update_message_1, Halt(), update_message_2]
+)
+
+############### testcase 38 ###############
+
+"""Testcase: Withdraw with an unknown WELL-KNOWN path attribute (No NLRI)."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message 1
+update_message_bfn_1 = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[tester_client_asn],
+    next_hop=tester_client_ip,
+    nlri=["59.66.130.0/24"]
+)
+
+attr_arbitrary = ArbitraryAttr_BFN(
+    attr_type_bfn=AttrType_BFN.get_bfn(
+        type_code=114, # An unknown type
+        higher_bits=[0,1,1,0], # WELL-KNOWN, transitive, partial, no extended length
+    ),
+    attr_value_bfn=Arbitrary_BFN(value=b'\x11\x45\x14\x19')
+) # Unknown path attribute.
+# UPDATE message 2
+update_message_bfn_2 = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=["59.66.130.0/24"],
+    nlri=[],
+    attr_bfn_list=[
+        attr_arbitrary
+    ]
+)
+update_message_1 = UpdateMessage(update_message_bfn_1)
+update_message_2 = UpdateMessage(update_message_bfn_2)
+
+# testcase
+testcase_38 = TestCase(
+    [open_message, keepalive_message, update_message_1, Halt(), update_message_2]
+)
+
+############### testcase 39 ###############
+
+"""Testcase: UPDATE message with only an unknown OPTIONAL path attribute (No NLRI)."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_arbitrary = ArbitraryAttr_BFN(
+    attr_type_bfn=AttrType_BFN.get_bfn(
+        type_code=114, # An unknown type
+        higher_bits=[1,1,1,0], # OPTIONAL, transitive, partial, no extended length
+    ),
+    attr_value_bfn=Arbitrary_BFN(value=b'\x11\x45\x14\x19')
+) # Unknown path attribute.
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=[],
+    attr_bfn_list=[
+        attr_arbitrary
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_39 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 40 ###############
+
+"""
+Testcase: UPDATE message with both NLRI, NEXT_HOP and MP_REACH_NLRI attribute.
+Same prefix in NLRIs, different next-hop.
+(NEXT_HOP after MP_REACH_NLRI, legal next-hop in NEXT_HOP)
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip)) # Legal next-hop in NEXT_HOP
+attr_mpreachnlri = MPReachNLRIAttr_BFN.get_ipv4_unicast_bfn(
+    mp_nexthop="10.1.1.1", # Illegal next-hop in MP_REACH_NLRI
+    mp_nlri=["59.66.130.0/24"]
+)
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_mpreachnlri,
+        attr_nexthop,
+    ] # MP_REACH_NLRI and NEXT_HOP
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_40 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 41 ###############
+
+"""
+Testcase: UPDATE message with both NLRI, NEXT_HOP and MP_REACH_NLRI attribute.
+Same prefix in NLRIs, different next-hop. 
+(NEXT_HOP after MP_REACH_NLRI, legal next-hop in MP_REACH_NLRI).
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN("10.1.1.1")) # Illegal next-hop in NEXT_HOP
+attr_mpreachnlri = MPReachNLRIAttr_BFN.get_ipv4_unicast_bfn(
+    mp_nexthop=tester_client_ip, # Legal next-hop in MP_REACH_NLRI
+    mp_nlri=["59.66.130.0/24"]
+)
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_mpreachnlri,
+        attr_nexthop,
+    ] # MP_REACH_NLRI and NEXT_HOP
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_41 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 42 ###############
+
+"""
+Testcase: UPDATE message with both NEXT_HOP and MP_REACH_NLRI attribute.
+Same prefix in NLRIs, different next-hop. 
+(legal next-hop in NEXT_HOP).
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip)) # Legal next-hop in NEXT_HOP
+attr_mpreachnlri = MPReachNLRIAttr_BFN.get_ipv4_unicast_bfn(
+    mp_nexthop="10.1.1.1", # Illegal next-hop in MP_REACH_NLRI
+    mp_nlri=["59.66.130.0/24"]
+)
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=[], # No NLRI
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_mpreachnlri,
+        attr_nexthop,
+    ] # MP_REACH_NLRI and NEXT_HOP
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_42 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 43 ###############
+
+"""
+Testcase: UPDATE message with both NEXT_HOP and MP_REACH_NLRI attribute.
+Same prefix in NLRIs, different next-hop. 
+(legal next-hop in MP_REACH_NLRI).
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN("10.1.1.1")) # Illegal next-hop in NEXT_HOP
+attr_mpreachnlri = MPReachNLRIAttr_BFN.get_ipv4_unicast_bfn(
+    mp_nexthop=tester_client_ip, # Legal next-hop in MP_REACH_NLRI
+    mp_nlri=["59.66.130.0/24"]
+)
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=[], # No NLRI
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_mpreachnlri,
+        attr_nexthop,
+    ] # MP_REACH_NLRI and NEXT_HOP
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_43 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 44 ###############
+
+"""Testcase: UPDATE message with MP_REACH_NLRI attribute with illegal NEXT_HOP value."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_mpreachnlri = MPReachNLRIAttr_BFN.get_ipv4_unicast_bfn(
+    mp_nexthop="10.1.1.1", # illegal NEXT_HOP value
+    mp_nlri=["59.66.130.0/24"]
+)
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=[], # NLRI is left empty
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_mpreachnlri
+    ] # MP_REACH_NLRI and no NEXT_HOP
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_44 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 45 ###############
+
+"""
+Testcase: UPDATE message with unknown path attribute.
+AND there is another path attribute embedded in the path attribute.
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_arbitrary = ArbitraryAttr_BFN(
+    attr_type_bfn=AttrType_BFN.get_bfn(
+        type_code=114, # An unknown type
+        higher_bits=[1,1,1,0], # optional, transitive, partial, no extended length
+    ),
+    # Embed a NEXT_HOP attribute in the path attribute.
+    attr_value_bfn=Arbitrary_BFN(value=attr_nexthop.get_binary_expression())
+) # Unknown path attribute.
+
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+        attr_arbitrary,
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_45 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 46 ###############
+
+"""
+Testcase: WELL-KNOWN attribute not transitive.
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_nexthop.set_is_transitive(False) # WELL-KNOWN attribute not transitive!
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_46 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 47 ###############
+
+"""
+Testcase: WELL-KNOWN attribute with partial bit 1.
+Violating RFC 4271: "For well-known attributes and for optional non-transitive attributes, the Partial bit MUST be set to 0."
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_nexthop.set_is_partial(True) # WELL-KNOWN attribute with partial bit 1!
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_47 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 48 ###############
+
+"""Testcase: UPDATE message with only an incomplete Marker field."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message with only an incomplete Marker field
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_bval(b"\xff"*7)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_48 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 49 ###############
+
+"""Testcase: UPDATE message with a large length and no content."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message with only an incomplete Marker field
+update_message_bfn = UpdateMessage_BFN.get_empty_message_bfn()
+update_message_bfn.set_length(24) # Set a large length
+update_message_bfn.set_message_content_bval(b"") # and set the message content into empty value
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_49 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 50 ###############
+
+"""
+BGP Update with the overall attribute field length exceeding the message length.
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[tester_client_asn],
+    next_hop=tester_client_ip,
+    nlri=["59.66.130.0/24"]
+)
+update_message_bfn.set_path_attr_len(200) # overall attribute length exceeding the message length.
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_50 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 51 ###############
+
+"""
+Testcase: UPDATE message with one particular attribute field length exceeding the message length.
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_aspath.set_length(200) # an attribute length exceeding the message length.
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_51 = TestCase([open_message, keepalive_message, update_message])
 
 
 ##############################################
@@ -903,4 +1535,24 @@ testcase_suite = [
     testcase_29,
     testcase_30,
     testcase_31,
+    testcase_32,
+    testcase_33,
+    testcase_34,
+    testcase_35,
+    testcase_36,
+    testcase_37,
+    testcase_38,
+    testcase_39,
+    testcase_40,
+    testcase_41,
+    testcase_42,
+    testcase_43,
+    testcase_44,
+    testcase_45,
+    testcase_46,
+    testcase_47,
+    testcase_48,
+    testcase_49,
+    testcase_50,
+    testcase_51,
 ]

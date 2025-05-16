@@ -640,6 +640,7 @@ class OpenMessage_BFN(BaseMessage_BFN):
             bgp_config.enhanced_route_refresh,
             bgp_config.extended_message,
             bgp_config.graceful_restart,
+            bgp_config.mpbgp_ipv4_unicast
         ]
         opt_parm_list = [
             item for item, flag in zip(candidate_list, selection_list) if flag

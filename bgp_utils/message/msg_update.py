@@ -253,6 +253,16 @@ class UpdateMessage_BFN(BaseMessage_BFN):
         )
         return UpdateMessage_BFN(update_msg_content_bfn)
 
+    @classmethod
+    def get_bfn_diy_bval(cls,
+                         bval: bytes) -> "UpdateMessage_BFN":
+        """
+        Generate the UPDATE message BFN from the input parameter list.
+        """
+        update_msg = cls.get_empty_message_bfn()
+        update_msg.set_bval(bval)
+        return update_msg
+
     ########## Get binary info ##########
 
     # Use methods from father class
@@ -272,22 +282,22 @@ class UpdateMessage_BFN(BaseMessage_BFN):
 
     def set_wroutes_len(self, length: int):
         """Set the length of Withdrawn Routes field."""
-        bfn : UpdateMessage_BFN = self.children[self.message_content_key]
+        bfn : UpdateMessageContent_BFN = self.children[self.message_content_key]
         bfn.set_wroutes_len(length)
     
     def set_wroutes(self, wroutes: list[str]):
         """Set the Withdrawn Routes field."""
-        bfn : UpdateMessage_BFN = self.children[self.message_content_key]
+        bfn : UpdateMessageContent_BFN = self.children[self.message_content_key]
         bfn.set_wroutes(wroutes)
     
     def set_path_attr_len(self, length: int):
         """Set the length of Path Attributes field."""
-        bfn : UpdateMessage_BFN = self.children[self.message_content_key]
+        bfn : UpdateMessageContent_BFN = self.children[self.message_content_key]
         bfn.set_path_attr_len(length)
     
     def set_nlri(self, nlri: list[str]):
         """Set the NLRI field."""
-        bfn : UpdateMessage_BFN = self.children[self.message_content_key]
+        bfn : UpdateMessageContent_BFN = self.children[self.message_content_key]
         bfn.set_nlri(nlri)
     
     ########## Method for selecting mutation ##########

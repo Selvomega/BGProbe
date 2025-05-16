@@ -14,7 +14,7 @@ from routing_software_interface.basic_types import RouterConfiguration, RouterSo
 from routing_software_interface.router_frr import FRRRouter
 from routing_software_interface.router_bird import BIRDRouter
 from routing_software_interface.utils import get_router_interface
-from .test_suite import TestCase, TestSuite
+from .test_suite import Halt, TestCase, TestSuite
 from .exabgp_agent import ExaBGPClient, ExaBGPClientConfiguration, start_exabgp, stop_exabgp
 
 class TestAgent:
@@ -92,6 +92,10 @@ class TestAgent:
 
         # Send the message one-by-one
         for message in test_case:
+            if isinstance(message, Halt):
+                print("Halting between BGP messages to ensure fully updating...")
+                sleep(2)
+                continue
             self.tcp_client.send(message.get_binary_expression())
             router_interface.wait_for_log() # Wait the state to become stable.
             if router_interface.if_crashed():

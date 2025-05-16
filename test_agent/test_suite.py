@@ -7,6 +7,12 @@ from types import FunctionType
 from bgp_utils.message import Message
 from routing_software_interface.basic_types import RouterConfiguration
 
+class Halt:
+    """
+    A dumb class used to notify the test agent to Halt.
+    """
+    pass
+
 class TestCase(list[Message]):
     """
     A list of the BGP messages as the test case.
@@ -17,7 +23,7 @@ class TestCase(list[Message]):
             raise ValueError("Wrong initialization of `TestCase`: value not a list")
         ret_list  = []
         for item in value:
-            if not isinstance(item, Message):
+            if not isinstance(item, (Message, Halt)):
                 raise ValueError(f"Wrong initialization of `TestCase`: {item} not a legal type")
             ret_list.append(item)
         return super().__new__(cls, ret_list)

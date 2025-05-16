@@ -35,7 +35,7 @@ def main(test_id: int):
                 local_source=router_software["veth"]
             ),
         ],
-        router_type=RouterSoftwareType.BIRD
+        router_type=RouterSoftwareType.FRR
     )
 
     ########## Load the Testcase ##########
@@ -59,7 +59,7 @@ def main(test_id: int):
 
     ########## Debug testcase ##########
 
-    # update_msg = testcase[0]
+    # update_msg = testcase[-1]
     # print(make_bytes_displayable(update_msg.get_binary_expression()))
 
 
