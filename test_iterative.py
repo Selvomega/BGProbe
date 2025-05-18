@@ -6,13 +6,10 @@ import sys, os, argparse
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from basic_utils.binary_utils import make_bytes_displayable
-from routing_software_interface.basic_types import RouterSoftwareType
 
 from test_agent.test_agent import TestAgent
 from test_configuration import *
 from testcase_factory import testcase_suite
-
-router_type = RouterSoftwareType.BIRD
 
 def main(test_id: int):
     """
@@ -71,7 +68,7 @@ if __name__ == "__main__":
         "number", 
         type=int, 
         help=f"Please enter an integer between 1-{len(testcase_suite)-1}",
-        choices=range(1, len(testcase_suite))  # 限制范围1-30
+        choices=range(1, len(testcase_suite))
     )
     args = parser.parse_args()
     # Run the main function. 

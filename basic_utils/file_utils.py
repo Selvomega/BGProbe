@@ -15,12 +15,18 @@ def file_exists(file_path: str) -> bool:
 
 def create_dir(dir_path: str):
     """Create a directory."""
-    os.mkdir(dir_path)
+    if not directory_exists(dir_path):
+        os.mkdir(dir_path)
 
 def create_file(file_path: str, content: str):
     """Create a file with given content."""
     with open(file_path, 'w') as file:
         file.write(content)
+
+def delete_file(file_path: str):
+    """Delete the given file."""
+    if file_exists(file_path):
+        os.system(f"sudo rm {file_path}")
 
 def allow_user_access(path: str):
     """

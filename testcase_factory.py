@@ -1564,7 +1564,7 @@ testcase_53 = TestCase([open_message, keepalive_message, update_message])
 ##############################################
 
 testcase_suite = [
-    None, 
+    testcase_0, 
     testcase_1,
     testcase_2,
     testcase_3,

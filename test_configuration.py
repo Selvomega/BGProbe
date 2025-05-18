@@ -7,7 +7,11 @@ from bgp_utils.bgp_configuration import BGP_Configuration, parse_bgp_config_from
 from test_agent.exabgp_agent import generate_exabgp_config, ExaBGPClientConfiguration
 from network_utils.tcp_client import TCPClientConfiguration
 from network_utils.utils import get_ipv4_prefix_parts
-from routing_software_interface.basic_types import RouterConfiguration, Neighbor
+from routing_software_interface.basic_types import RouterConfiguration, Neighbor, RouterSoftwareType
+
+############### Define the type of the routing software ###############
+
+router_type = RouterSoftwareType.FRR
 
 ############### Load configurations from files ###############
 
