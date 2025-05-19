@@ -17,11 +17,18 @@ from routing_software_interface.utils import get_router_interface
 from .test_suite import Halt, TestCase, TestSuite
 from .exabgp_agent import ExaBGPClient, ExaBGPClientConfiguration, start_exabgp, stop_exabgp
 
+MESSAGE_MRT_FILE = "messages.mrt"
+ROUTE_MRT_FILE = "routes.mrt"
+EXABGP_LOG_FILE = "exabgp.log"
+BGPD_LOG_FILE = "bgpd.log"
+ROUTER_CONFIG_PKL_FILE = "router_conf.pkl"
+TESTCASE_PKL_FILE = "testcase.pkl"
+
 TEMP_DUMP_DIR = f"{REPO_ROOT_PATH}/log/temp_dump"
-TEMP_MESSAGE_DUMP = f"{TEMP_DUMP_DIR}/messages.mrt"
-TEMP_ROUTE_DUMP = f"{TEMP_DUMP_DIR}/routes.mrt"
-TEMP_EXABGP_DUMP = f"{TEMP_DUMP_DIR}/exabgp.log"
-TEMP_BGPD_DUMP = f"{TEMP_DUMP_DIR}/bgpd.log"
+TEMP_MESSAGE_DUMP = f"{TEMP_DUMP_DIR}/{MESSAGE_MRT_FILE}"
+TEMP_ROUTE_DUMP = f"{TEMP_DUMP_DIR}/{ROUTE_MRT_FILE}"
+TEMP_EXABGP_DUMP = f"{TEMP_DUMP_DIR}/{EXABGP_LOG_FILE}"
+TEMP_BGPD_DUMP = f"{TEMP_DUMP_DIR}/{BGPD_LOG_FILE}"
 
 class TestAgent:
     """
@@ -86,10 +93,10 @@ class TestAgent:
         # Different dumping behavior for different BGP softwares
         if isinstance(router_interface, FRRRouter):
             # For FRRouting bgpd, we start to dump ONLY BGP UPDATE messages here.
-            router_interface.dump_updates(f"{dump_path}/messages.mrt")
+            router_interface.dump_updates(f"{dump_path}/{MESSAGE_MRT_FILE}")
         elif isinstance(router_interface, BIRDRouter):
             # For BIRD bgpd, we start to dump ALL BGP messages here.
-            router_interface.dump_messages(f"{dump_path}/messages.mrt")
+            router_interface.dump_messages(f"{dump_path}/{MESSAGE_MRT_FILE}")
         else:
             # This should not happen...
             raise ValueError("Unexpected type of the router interface!")
@@ -123,18 +130,18 @@ class TestAgent:
         # There is no need to clear the exabgp log since it will be overwritten 
         router_interface.clear_log()
         # Create bgpd log and exabgp log
-        create_file(f"{dump_path}/bgpd.log", bgpd_log_content)
-        create_file(f"{dump_path}/exabgp.log", exabgp_log_content)
+        create_file(f"{dump_path}/{BGPD_LOG_FILE}", bgpd_log_content)
+        create_file(f"{dump_path}/{EXABGP_LOG_FILE}", exabgp_log_content)
 
         # Dumping RIB here, different behaviors for different BGP softwares
         if isinstance(router_interface, FRRRouter):
             # For FRRouting bgpd, dumping RIB is like taking a snapshot.
-            router_interface.dump_routing_table(f"{dump_path}/routes.mrt")
+            router_interface.dump_routing_table(f"{dump_path}/{ROUTE_MRT_FILE}")
             # Sleep for a while to wait for the dumping
             sleep(1.5)
         elif isinstance(router_interface, BIRDRouter):
             # For BIRD bgpd, dumping is periodic, we set the period as 1 second.
-            router_interface.dump_routing_table(f"{dump_path}/routes.mrt")
+            router_interface.dump_routing_table(f"{dump_path}/{ROUTE_MRT_FILE}")
             # So we need to sleep longer
             sleep(2)
         else:
@@ -154,9 +161,9 @@ class TestAgent:
 
         # Dump the testcase setting
         save_variable_to_file(router_configuration, 
-                                f"{dump_path}/router_conf.pkl")
+                                f"{dump_path}/{ROUTER_CONFIG_PKL_FILE}")
         save_variable_to_file(test_case, 
-                                f"{dump_path}/test_case.pkl")
+                                f"{dump_path}/{TESTCASE_PKL_FILE}")
         
         # Allow user to access the dumped directory
         allow_user_access(dump_path)
@@ -305,18 +312,18 @@ class TestAgent:
                 create_dir(temp_path)
                 # Copy the temporary dumps into permanent dumps
                 if file_exists(TEMP_MESSAGE_DUMP):
-                    os.system(f"sudo cp {TEMP_MESSAGE_DUMP} {temp_path}/messages.mrt")
+                    os.system(f"sudo cp {TEMP_MESSAGE_DUMP} {temp_path}/{MESSAGE_MRT_FILE}")
                 if file_exists(TEMP_ROUTE_DUMP):
-                    os.system(f"sudo cp {TEMP_ROUTE_DUMP} {temp_path}/routes.mrt")
+                    os.system(f"sudo cp {TEMP_ROUTE_DUMP} {temp_path}/{ROUTE_MRT_FILE}")
                 if file_exists(TEMP_EXABGP_DUMP):
-                    os.system(f"sudo cp {TEMP_EXABGP_DUMP} {temp_path}/exabgp.log")
+                    os.system(f"sudo cp {TEMP_EXABGP_DUMP} {temp_path}/{EXABGP_LOG_FILE}")
                 if file_exists(TEMP_BGPD_DUMP):
-                    os.system(f"sudo cp {TEMP_BGPD_DUMP} {temp_path}/bgpd.log")
+                    os.system(f"sudo cp {TEMP_BGPD_DUMP} {temp_path}/{BGPD_LOG_FILE}")
                 # Dump the testcase setting
                 save_variable_to_file(router_configuration, 
-                                      f"{temp_path}/router_conf.pkl")
+                                      f"{temp_path}/{ROUTER_CONFIG_PKL_FILE}")
                 save_variable_to_file(test_case,
-                                      f"{temp_path}/test_case.pkl")
+                                      f"{temp_path}/{TESTCASE_PKL_FILE}")
 
             ###### Check if the testcase satisfies expectation ######
 
@@ -327,18 +334,18 @@ class TestAgent:
                 create_dir(temp_path)
                 # Copy the temporary dumps into permanent dumps
                 if file_exists(TEMP_MESSAGE_DUMP):
-                    os.system(f"sudo cp {TEMP_MESSAGE_DUMP} {temp_path}/messages.mrt")
+                    os.system(f"sudo cp {TEMP_MESSAGE_DUMP} {temp_path}/{MESSAGE_MRT_FILE}")
                 if file_exists(TEMP_ROUTE_DUMP):
-                    os.system(f"sudo cp {TEMP_ROUTE_DUMP} {temp_path}/routes.mrt")
+                    os.system(f"sudo cp {TEMP_ROUTE_DUMP} {temp_path}/{ROUTE_MRT_FILE}")
                 if file_exists(TEMP_EXABGP_DUMP):
-                    os.system(f"sudo cp {TEMP_EXABGP_DUMP} {temp_path}/exabgp.log")
+                    os.system(f"sudo cp {TEMP_EXABGP_DUMP} {temp_path}/{EXABGP_LOG_FILE}")
                 if file_exists(TEMP_BGPD_DUMP):
-                    os.system(f"sudo cp {TEMP_BGPD_DUMP} {temp_path}/bgpd.log")
+                    os.system(f"sudo cp {TEMP_BGPD_DUMP} {temp_path}/{BGPD_LOG_FILE}")
                 # Dump the testcase setting
                 save_variable_to_file(router_configuration, 
-                                      f"{temp_path}/router_conf.pkl")
+                                      f"{temp_path}/{ROUTER_CONFIG_PKL_FILE}")
                 save_variable_to_file(test_case,
-                                      f"{temp_path}/test_case.pkl")
+                                      f"{temp_path}/{TESTCASE_PKL_FILE}")
                 
             ###### Recover if the routing software crashes ######
 
@@ -366,6 +373,6 @@ class TestAgent:
         assert not directory_exists(dump_path)
         create_dir(dump_path)
         save_variable_to_file(router_config,
-                              f"{dump_path}/router_config.pkl")
+                              f"{dump_path}/{ROUTER_CONFIG_PKL_FILE}")
         save_variable_to_file(test_case,
-                              f"{dump_path}/testcase.pkl")
+                              f"{dump_path}/{TESTCASE_PKL_FILE}")
