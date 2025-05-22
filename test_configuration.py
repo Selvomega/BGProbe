@@ -11,7 +11,7 @@ from routing_software_interface.basic_types import RouterConfiguration, Neighbor
 
 ############### Define the type of the routing software ###############
 
-router_type = RouterSoftwareType.FRR
+router_type = RouterSoftwareType.BIRD
 
 ############### Load configurations from files ###############
 

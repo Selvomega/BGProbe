@@ -1666,7 +1666,7 @@ testcase_56 = TestCase([open_message, keepalive_message, update_message])
 #               Testcase Suite               #
 ##############################################
 
-testcase_suite = [
+single_testcase_suite = [
     testcase_0, 
     testcase_1,
     testcase_2,

@@ -15,8 +15,8 @@ from routing_software_interface.basic_types import RouterConfiguration, RouterSo
 from routing_software_interface.utils import get_router_interface
 from basic_utils.binary_utils import make_bytes_displayable
 
-from testcase_factory import VNET_CONFIG, BGP_CONFIG
-from testcase_factory import testcase_1, testcase_2
+from testcase_factory.single_testcase_factory import VNET_CONFIG, BGP_CONFIG
+from testcase_factory.single_testcase_factory import testcase_1, testcase_2
 
 ########## Local network configuration ##########
 

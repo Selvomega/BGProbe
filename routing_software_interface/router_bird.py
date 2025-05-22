@@ -227,10 +227,25 @@ protocol bgp peer{peer_count} {{
             with open(BIRD_CONF, "w") as f:
                 f.write(new_content)
     
+    def config_in_progress(self):
+        """
+        Check if the configuration is in progress
+        """
+        output = subprocess.check_output(['sudo', 'birdc', 'show', 'status'], stderr=subprocess.STDOUT, text=True)
+        return "reconfiguration in progress" in output.lower()
+                
     def config_instance(self):
         """
         Configure the BIRD router daemon instance.
         """
+        counter = 0
+        while self.config_in_progress():
+            sleep(0.1)
+            counter = counter + 1
+            if counter>50:
+                print("BIRD routing daemon configure for too long! Regard as a failure.")
+                os.system("sudo kill -9 $(pidof bird)")
+                return
         os.system("sudo birdc configure")
 
     ########## Dump MRT file ##########
@@ -280,13 +295,6 @@ protocol bgp peer{peer_count} {{
         super().clear_log(BIRD_LOG)
     
     ########## Crash management ##########
-
-    # def if_crashed(self) -> bool:
-    #     """
-    #     Return if the router software has crashed.
-    #     """
-    #     output = subprocess.getoutput("systemctl is-active bird")
-    #     return output!="active"
     
     @classmethod
     def if_crashed(cls) -> bool:
@@ -317,7 +325,7 @@ protocol bgp peer{peer_count} {{
         counter = 0
         while not started:
             os.system("sudo bird")
-            sleep(0.5)
+            sleep(15)
             started = not self.if_crashed()
             counter  = counter + 1
             if counter>=5:

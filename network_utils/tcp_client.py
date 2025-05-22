@@ -26,6 +26,7 @@ class TCPClient:
         self.configuration = configuration
         self.socket = None
         self.connected = False
+        self.original_fd = None
 
     def start(self):
         """
@@ -37,6 +38,7 @@ class TCPClient:
         try:
             # Switch to network namespace if specified
             if self.configuration.netns:
+                self.original_fd = os.open("/proc/self/ns/net", os.O_RDONLY)
                 netns_fd = open(f"/var/run/netns/{self.configuration.netns}")
                 os.setns(netns_fd.fileno(), 0)
                 netns_fd.close()
@@ -102,11 +104,15 @@ class TCPClient:
         if self.socket:
             try:
                 self.socket.close()
+                if self.original_fd is not None:
+                    os.setns(self.original_fd, 0)
+                    os.close(self.original_fd)
+                    self.original_fd = None
             except:
                 pass
         self.connected = False
         self.socket = None
-        print("Connection closed")
+        # print("Connection closed")
 
     def __del__(self):
         """

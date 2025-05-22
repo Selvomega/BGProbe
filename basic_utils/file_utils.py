@@ -4,6 +4,7 @@ import os
 TESTCASE_DUMP_SINGLE = 'log/test_single'
 TESTCASE_DUMP_BATCHED = 'log/test_batched'
 TESTCASE_DUMP_CRASHED = 'log/test_crashed'
+TESTCASE_DUMP_REPEATED = 'log/test_repeated'
 
 def directory_exists(dir_path: str) -> bool:
     """Check if the directory exists."""

@@ -1,5 +1,5 @@
 # This file is used to test the BGP routing software in batch.
-# You only need to select the test suite from `testsuite_factory.py` and run here.
+# You only need to select the test suite from `batched_testcase_factory.py` and run here.
 # The routing software is automatically set-up and torn-down.
 
 import sys, os, argparse
@@ -11,7 +11,7 @@ from basic_utils.log_parse_utils import *
 
 from test_agent.test_agent import *
 from test_configuration import *
-from testbatch_factory import *
+from testcase_factory.batched_testcase_factory import *
 
 TESTCASE_ID = "id"
 CRASHED_KEY = "crashed"

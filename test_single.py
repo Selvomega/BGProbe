@@ -1,5 +1,5 @@
 # This file is used to test the BGP routing software iteratively.
-# You only need to select the testcase from `testcase_factory.py` and run here.
+# You only need to select the testcase from `single_testcase_factory.py` and run here.
 # The routing software is automatically set-up and torn-down.
 
 import sys, os, argparse
@@ -9,7 +9,7 @@ from basic_utils.binary_utils import make_bytes_displayable
 
 from test_agent.test_agent import TestAgent
 from test_configuration import *
-from testcase_factory import testcase_suite
+from testcase_factory.single_testcase_factory import single_testcase_suite
 
 def main(test_id: int):
     """
@@ -38,7 +38,7 @@ def main(test_id: int):
 
     ########## Load the Testcase ##########
 
-    testcase = testcase_suite[test_id]
+    testcase = single_testcase_suite[test_id]
 
     ########## Initialize the TestAgent ##########
 
@@ -49,7 +49,7 @@ def main(test_id: int):
 
     ########## Run testcase ##########
 
-    test_agent.run_single_testcase(
+    test_agent.run_test_single(
         test_case=testcase,
         router_configuration=router_config,
         test_name=f"testcase-{test_id}",
@@ -65,10 +65,10 @@ if __name__ == "__main__":
     # Create the arg parser. 
     parser = argparse.ArgumentParser(description="Deal with the testcase id")
     parser.add_argument(
-        "number", 
+        "--number", "-n",
         type=int, 
-        help=f"Please enter an integer between 1-{len(testcase_suite)-1}",
-        choices=range(1, len(testcase_suite))
+        help=f"Please enter an integer between 0-{len(single_testcase_suite)-1}",
+        choices=range(0, len(single_testcase_suite))
     )
     args = parser.parse_args()
     # Run the main function. 

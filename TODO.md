@@ -4,7 +4,7 @@
 
 ## 4. Solve the bug in graceful restart
 
-## 5. Deal with connection ending in `TestAgent.run_single_testcase`.
+## 5. Deal with connection ending in `TestAgent.run_test_single`.
 
 =============================================================
 

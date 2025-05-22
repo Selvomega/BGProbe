@@ -1,6 +1,6 @@
 # TODO
 
-## 1. Deal with connection ending in `TestAgent.run_single_testcase`.
+## 1. Deal with connection ending in `TestAgent.run_test_single`.
 
 =============================================================
 
