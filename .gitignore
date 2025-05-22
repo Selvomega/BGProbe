@@ -10,6 +10,7 @@ test.py
 draft.py
 observe.txt
 temp.pkl
+nohup.log
 
 **/*obsoleted*/
 **/obsoleted*/

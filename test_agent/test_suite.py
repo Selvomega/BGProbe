@@ -18,15 +18,20 @@ class TestCase(list[Message]):
     A list of the BGP messages as the test case.
     Send one-by-one to form the test
     """
-    def __new__(cls, value):
+    def __new__(cls, value=None):
+        if value is None:
+            # Called by pickle or internal machinery, skip validation
+            return super().__new__(cls)
+        
         if not isinstance(value, list):
             raise ValueError("Wrong initialization of `TestCase`: value not a list")
-        ret_list  = []
+        
         for item in value:
             if not isinstance(item, (Message, Halt)):
                 raise ValueError(f"Wrong initialization of `TestCase`: {item} not a legal type")
-            ret_list.append(item)
-        return super().__new__(cls, ret_list)
+        
+        # Create the instance using the validated list
+        return super().__new__(cls, value)
 
 class TestSuite():
     """

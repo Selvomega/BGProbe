@@ -28,6 +28,11 @@ def delete_file(file_path: str):
     if file_exists(file_path):
         os.system(f"sudo rm {file_path}")
 
+def list_subdirectories(path: str):
+    """List all subdirectories under the input directory."""
+    return [name for name in os.listdir(path)
+            if os.path.isdir(os.path.join(path, name))]
+
 def allow_user_access(path: str):
     """
     Give user access to given path.

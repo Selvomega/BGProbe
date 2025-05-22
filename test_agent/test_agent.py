@@ -4,7 +4,7 @@ This file defines the agent used to advertise malformed messages.
 
 from types import FunctionType
 from time import sleep
-from basic_utils.serialize_utils import save_variable_to_file
+from basic_utils.serialize_utils import save_variable_to_file, read_variables_from_file
 from basic_utils.time_utils import get_current_time
 from basic_utils.file_utils import *
 from basic_utils.const import *
@@ -23,6 +23,7 @@ EXABGP_LOG_FILE = "exabgp.log"
 BGPD_LOG_FILE = "bgpd.log"
 ROUTER_CONFIG_PKL_FILE = "router_conf.pkl"
 TESTCASE_PKL_FILE = "testcase.pkl"
+CRASH_MARKER_FILE = "crashed"
 
 TEMP_DUMP_DIR = f"{REPO_ROOT_PATH}/log/temp_dump"
 TEMP_MESSAGE_DUMP = f"{TEMP_DUMP_DIR}/{MESSAGE_MRT_FILE}"
@@ -351,6 +352,148 @@ class TestAgent:
 
             if router_interface.if_crashed():
                 router_interface.recover_from_crash()
+
+            ###### End the routing software instance and clients ######
+            
+            self.tcp_client.end()
+            router_interface.wait_for_log() # Shut down the clients one by one.
+            self.exabgp_client.end()
+            router_interface.end_bgp_instance()
+    
+    def run_test_batch(self, 
+                       test_batch_name: str,
+                       router_configuration: RouterConfiguration):
+        """
+        Run the test suite, and check if the test case achieve the effect we want.
+        """
+
+        ######### Initialize the router interface ##########
+
+        router_interface = get_router_interface(router_configuration)
+
+        ######### Prepare the directory for dumping #########
+        
+        data_file_path = f"{REPO_ROOT_PATH}/test_batches/{test_batch_name}.pkl"
+        dump_dir_path = f"{REPO_ROOT_PATH}/{TESTCASE_DUMP_BATCHED}/{test_batch_name}"
+        if directory_exists(dump_dir_path):
+            os.system(f"sudo rm -r {dump_dir_path}")
+        create_dir(dump_dir_path)
+        dump_dir_path = f"{dump_dir_path}/data"
+        create_dir(dump_dir_path)
+
+        ########## Enumerate the testcases ##########
+
+        # First read out the testcases
+        testcase_list = read_variables_from_file(data_file_path)[0]
+        
+        for i in range(0,len(testcase_list)):
+            
+            ###### Prepare for dumping ######
+
+            testcase_dump_dir_path = f"{dump_dir_path}/testcase_{i+1}"
+            create_dir(testcase_dump_dir_path)
+
+            test_case = testcase_list[i]
+
+            # Clear the bgpd log.
+            router_interface.clear_log() 
+
+            ###### Start the routing software instance and clients ######
+
+            router_interface.start_bgp_instance()
+            router_interface.wait_for_log() # Start the clients one by one.
+            self.exabgp_client.start()
+            router_interface.wait_for_log() # Start the clients one by one.
+            self.tcp_client.start()
+
+            ###### Minor part of dumping ######
+
+            # We should dump into temporary path first and then 
+            # copy to the "permanent storage" if `dump_all` is set.
+
+            # Different dumping behavior for different BGP softwares
+            if isinstance(router_interface, FRRRouter):
+                # For FRRouting bgpd, we start to dump ONLY BGP UPDATE messages here.
+                router_interface.dump_updates(f"{testcase_dump_dir_path}/{MESSAGE_MRT_FILE}")
+            elif isinstance(router_interface, BIRDRouter):
+                # For BIRD bgpd, we start to dump ALL BGP messages here.
+                router_interface.dump_messages(f"{testcase_dump_dir_path}/{MESSAGE_MRT_FILE}")
+            else:
+                # This should not happen...
+                raise ValueError("Unexpected type of the router interface!")
+
+            ###### Send the test messages ######
+
+            # Send the message one-by-one
+            for message in test_case:
+                if isinstance(message, Halt):
+                    print("Halting between BGP messages to ensure fully updating...")
+                    sleep(2)
+                    continue
+                self.tcp_client.send(message.get_binary_expression())
+                router_interface.wait_for_log() # Wait the state to become stable.
+                if router_interface.if_crashed():
+                    # Save the router configuration and the testcase to a special folder.
+                    self.save_crash_setting(router_config=router_configuration,
+                                            test_case=test_case,
+                                            name=f"{test_batch_name}_testcase_{i+1}")
+                    break
+
+            ###### Deal with software crash ######
+
+            if router_interface.if_crashed():
+                # Mark the testcase has 
+                create_file(f"{testcase_dump_dir_path}/{CRASH_MARKER_FILE}", "1")
+                # Restart 
+                router_interface.recover_from_crash()
+                # Skip this testcase
+                break
+            
+            ###### Main part of dumping ######
+        
+            # Wait for the ExaBGP log to be ready
+            sleep(2)
+
+            # Get the contents for bgpd log and exabgp log
+            bgpd_log_content = router_interface.read_log()
+            exabgp_log_content = self.exabgp_client.read_log()
+            # Clear the bgpd log
+            # There is no need to clear the exabgp log since it will be overwritten 
+            router_interface.clear_log()
+            # Create bgpd log and exabgp log
+            create_file(f"{testcase_dump_dir_path}/{BGPD_LOG_FILE}", bgpd_log_content)
+            create_file(f"{testcase_dump_dir_path}/{EXABGP_LOG_FILE}", exabgp_log_content)
+            # Dump the testcase settings
+            save_variable_to_file(router_configuration, 
+                                  f"{testcase_dump_dir_path}/{ROUTER_CONFIG_PKL_FILE}")
+            save_variable_to_file(test_case,
+                                  f"{testcase_dump_dir_path}/{TESTCASE_PKL_FILE}")
+
+            # Dumping RIB here, different behaviors for different BGP softwares
+            if isinstance(router_interface, FRRRouter):
+                # For FRRouting bgpd, dumping RIB is like taking a snapshot.
+                router_interface.dump_routing_table(f"{testcase_dump_dir_path}/{ROUTE_MRT_FILE}")
+                # Sleep for a while to wait for the dumping
+                sleep(1.5)
+            elif isinstance(router_interface, BIRDRouter):
+                # For BIRD bgpd, dumping is periodic, we set the period as 1 second.
+                router_interface.dump_routing_table(f"{testcase_dump_dir_path}/{ROUTE_MRT_FILE}")
+                # So we need to sleep longer
+                sleep(2)
+            else:
+                # This should not happen...
+                raise ValueError("Unexpected type of the router interface!")
+
+            # Stop MRT dumping, different behaviors for different BGP softwares
+            if isinstance(router_interface, FRRRouter):
+                router_interface.stop_dump_updates()
+                router_interface.stop_dump_routing_table()
+            elif isinstance(router_interface, BIRDRouter):
+                router_interface.stop_dump_messages()
+                router_interface.stop_dump_routing_table()
+            else:
+                # This should not happen...
+                raise ValueError("Unexpected type of the router interface!")
 
             ###### End the routing software instance and clients ######
             

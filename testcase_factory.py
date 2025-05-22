@@ -7,7 +7,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from bgp_utils.message import OpenMessage_BFN, OpenMessage, KeepAliveMessage_BFN, KeepAliveMessage, UpdateMessageContent_BFN, UpdateMessage_BFN, UpdateMessage, WithdrawnRoutes_BFN, NLRI_BFN, PathAttributes_BFN
 from bgp_utils.path_attribute import AttrType_BFN, BaseAttr_BFN, OriginType, Origin_BFN, OriginAttr_BFN, PathSegementType, PathSegmentType_BFN, PathSegmentLength_BFN, PathSegmentValue_BFN, PathSegment_BFN, ASPath_BFN, ASPathAttr_BFN, NextHop_BFN, NextHopAttr_BFN, Communities_BFN, CommunitiesAttr_BFN, MPReachNLRI_BFN, MPReachNLRIAttr_BFN, MPUnreachNLRI_BFN, MPUnreachNLRIAttr_BFN, LOCPREF_BFN, LOCPREFAttr_BFN, Arbitrary_BFN, ArbitraryAttr_BFN
 from bgp_utils.basic_bfn_types import IPv4Prefix_BFN, Length_BFN
-from basic_utils.binary_utils import bytes2num
+from bgp_utils.binary_field_node import *
+from basic_utils.binary_utils import bytes2num, make_bytes_displayable
 from test_agent.test_suite import TestCase, Halt
 
 from test_configuration import *
@@ -63,6 +64,7 @@ update_message_bfn = UpdateMessage_BFN.get_bfn(
     next_hop=tester_client_ip,
     nlri=["59.66.130.0/24"]
 )
+
 update_message = UpdateMessage(update_message_bfn)
 
 # testcase
@@ -813,6 +815,7 @@ testcase_29 = TestCase([open_message, keepalive_message, update_message])
 
 """
 Testcase: UPDATE message with near-maximum message size (65535).
+The size is stuffed by a long COMMUNITIES list. 
 Current size is 65533.
 """
 
@@ -1557,7 +1560,107 @@ update_message = UpdateMessage(update_message_bfn)
 # testcase
 testcase_53 = TestCase([open_message, keepalive_message, update_message])
 
+############### testcase 54 ###############
 
+"""
+Testcase: UPDATE message with near-maximum message size (65535).
+The size is stuffed by an unknown optional transitive attribute. 
+Current size is 65534.
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_arbitrary = ArbitraryAttr_BFN(
+    attr_type_bfn=AttrType_BFN.get_bfn(
+        type_code=114, # An unknown type,
+        higher_bits=[1,1,1,1], # optional, transitive, partial, use extended length
+    ),
+    attr_value_bfn=Arbitrary_BFN(value=b'\x00'*65485)
+) # Unknown path attribute.
+
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+        attr_arbitrary,
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# Show the message size in octets
+# print(update_message_bfn.get_binary_length())
+
+# testcase
+testcase_54 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 55 ###############
+
+"""
+Testcase: UPDATE message with some random contents attached to the end.
+"""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[tester_client_asn],
+    next_hop=tester_client_ip,
+    nlri=["59.66.130.0/24"]
+)
+update_message_bfn.set_bval(update_message_bfn.get_binary_expression()+b"\x01"*5)
+# update_message_bfn.set_bval(update_message_bfn.get_binary_expression()+update_message_bfn.get_binary_expression())
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_55 = TestCase([open_message, keepalive_message, update_message])
+
+############### testcase 56 ###############
+
+"""Testcase: UPDATE message with repeated unknown path attribute."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+attr_arbitrary = ArbitraryAttr_BFN(
+    attr_type_bfn=AttrType_BFN.get_bfn(
+        type_code=114, # An unknown type
+        higher_bits=[1,1,1,0], # optional, transitive, partial, no extended length
+    ),
+    attr_value_bfn=Arbitrary_BFN(value=b'\x11\x45\x14\x19')
+) # Unknown path attribute.
+
+# UPDATE message
+update_message_bfn = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=["59.66.130.0/24"],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+        attr_arbitrary,
+        attr_arbitrary, # Repeated unknown path attribute.
+    ]
+)
+update_message = UpdateMessage(update_message_bfn)
+
+# testcase
+testcase_56 = TestCase([open_message, keepalive_message, update_message])
 
 ##############################################
 #               Testcase Suite               #
@@ -1618,4 +1721,7 @@ testcase_suite = [
     testcase_51,
     testcase_52,
     testcase_53,
+    testcase_54,
+    testcase_55,
+    testcase_56,
 ]

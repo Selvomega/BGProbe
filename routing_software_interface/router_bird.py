@@ -288,7 +288,8 @@ protocol bgp peer{peer_count} {{
     #     output = subprocess.getoutput("systemctl is-active bird")
     #     return output!="active"
     
-    def if_crashed(self) -> bool:
+    @classmethod
+    def if_crashed(cls) -> bool:
         """
         Return if the router software has crashed.
         """

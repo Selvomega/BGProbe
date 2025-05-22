@@ -215,7 +215,8 @@ class FRRRouter(BaseRouter):
 
     ########## Crash management ##########
 
-    def if_crashed(self) -> bool:
+    @classmethod
+    def if_crashed(cls) -> bool:
         """
         Return if the router software has crashed.
         """

@@ -449,7 +449,7 @@ class BinaryFieldNode(ABC):
             self.update_depend_on_me()
             return result
         return wrapper
-    
+
     @set_function_decorator
     def set_bval(self, binary_value: bytes):
         """
@@ -471,7 +471,7 @@ class BinaryFieldNode(ABC):
         Set the suffix of the binary expression. 
         """
         self.suffix = suffix
-    
+
     ########## Method for selecting mutation ##########
 
     class MutationItem:
@@ -479,8 +479,8 @@ class BinaryFieldNode(ABC):
         The class used for mutations.
         """
         def __init__(self,
-                     random_generator: Callable[[Any], Any],
-                     setter: Callable[[Any], None]):
+                        random_generator: Callable[[Any], Any],
+                        setter: Callable[[Any], None]):
             """
             Initialize the `MutationItem`.
             `random_generator` takes the class and return the generated value.
@@ -510,7 +510,7 @@ class BinaryFieldNode(ABC):
             """
             ret = self.gen_val(others_self)
             self.set_val(others_self, ret)
-    
+
     # mutation set 
     # You may overwrite this variable. 
     mutation_set = [
@@ -555,3 +555,68 @@ class BinaryFieldNode(ABC):
         self.weights = np.array(new_weights, dtype=float)
         # Normalize.
         self.weights = self.weights / np.sum(self.weights)
+
+    ########## Method for random selection ##########
+
+    @classmethod
+    def is_bfn(cls, other_self):
+        """
+        Return True if the BFN is a BFN (?)
+        """
+        return 1
+
+    @classmethod
+    def is_length_bfn(cls, other_self):
+        """
+        Return 1 if the BFN is a Length_BFN (?)
+        """
+        from .basic_bfn_types import Length_BFN
+        return 1 if isinstance(other_self, Length_BFN) else 0
+    
+    @classmethod
+    def is_attr_bfn(cls, other_self):
+        """
+        Return 1 if the BFN is a Length_BFN (?)
+        """
+        from .path_attribute import BaseAttr_BFN
+        return 1 if isinstance(other_self, BaseAttr_BFN) else 0
+
+    def get_cone_node_weight(
+            self,
+            weight_func,
+        ):
+        """
+        Get the overall weight of BFNs in the cone under the current BFN (include itself).
+        Can be used to calculate the number of BFNs satisfying some given criterion.
+        """
+        # Count myself
+        total_weight = weight_func(self)
+        for child in self.children.values():
+            total_weight = total_weight + child.get_cone_node_weight(weight_func)
+        return total_weight
+
+    def sample_under_cone(
+            self,
+            weight_func,
+        ) -> "BinaryFieldNode":
+        """
+        Sample and return a BFN in the BFN cone under the current BFN
+        according to the weight computed by `weight_func`.
+        """
+        bfns = [None] + [child_key for child_key in self.children]
+        weights = [weight_func(self)] + [child.get_cone_node_weight(weight_func) for child in self.children.values()]
+        # Raise an error if the weights is all zero. 
+        if set(weights) == {0}:
+            raise ValueError("The weight list is all zero!")
+        chosen = random.choices(bfns, weights=weights, k=1)[0]
+        if chosen is None:
+            return self
+        return self.children[chosen].sample_under_cone(weight_func)
+    
+    def uniformly_apply_mutation(self):
+        """
+        Uniformly select and apply a mutation of the current BFN.
+        """
+        mutation_item: BinaryFieldNode.MutationItem = random.sample(self.mutation_set, 1)[0]
+        rand_val = mutation_item.gen_val(self)
+        mutation_item.set_val(self, rand_val)

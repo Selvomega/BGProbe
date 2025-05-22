@@ -81,8 +81,9 @@ class BaseRouter(ABC):
 
     ########## Crash management ##########
 
+    @classmethod
     @abstractmethod
-    def if_crashed(self) -> bool:
+    def if_crashed(cls) -> bool:
         """
         Return if the router software has crashed.
         """

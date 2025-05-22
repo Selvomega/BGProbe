@@ -192,9 +192,9 @@ class ASN_BFN(Number_BFN):
         Return a random AS number.
         The AS numbr is guaranteed to be legal.
         """
-        if self.asn_byte_len == 2:
+        if self.num_len == 2:
             return random.randint(1,64495)
-        elif self.asn_byte_len == 4:
+        elif self.num_len == 4:
             return random.randint(65536, 4199999999)
         else:
             # You are using an illegal AS number length
