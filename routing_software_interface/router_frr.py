@@ -236,6 +236,13 @@ class FRRRouter(BaseRouter):
             counter  = counter + 1
             if counter>=5:
                 raise ValueError("Restarting FRRouting failed for 5 times.")
+    
+    def restart_software(self):
+        """
+        Restart the software.
+        """
+        os.system("sudo systemctl restart frr")
+        sleep(1)
 
     ########## Other utils ##########
 

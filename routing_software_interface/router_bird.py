@@ -325,11 +325,18 @@ protocol bgp peer{peer_count} {{
         counter = 0
         while not started:
             os.system("sudo bird")
-            sleep(15)
+            sleep(10)
             started = not self.if_crashed()
             counter  = counter + 1
             if counter>=5:
                 raise ValueError("Restarting BIRD failed for 5 times.")
+    
+    def restart_software(self):
+        """
+        Restart the software.
+        """
+        os.system("sudo kill -9 $(pidof bird)")
+        os.system("sudo bird")
     
     ########## Other utils ##########
 

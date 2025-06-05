@@ -330,6 +330,12 @@ class TestAgent:
                 # Restart and wait for a while
                 router_interface.recover_from_crash()
                 sleep(1)
+            
+            ###### Clear the states and restart the software ######
+
+            self.tcp_client.end()
+            self.exabgp_client.end()
+            router_interface.restart_software()
 
     def run_test_repeated(self,
                           testcase_name: str,
@@ -467,6 +473,12 @@ class TestAgent:
                 create_file(f"{testcase_dump_dir_path}/{CRASH_MARKER_FILE}", "1")
                 # Restart and wait for a while
                 router_interface.recover_from_crash()
+            
+            ###### Clear the states and restart the software ######
+
+            self.tcp_client.end()
+            self.exabgp_client.end()
+            router_interface.restart_software()
 
     def save_crash_setting(self,
                            router_config: RouterConfiguration,
