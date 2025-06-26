@@ -5,12 +5,12 @@ Initialize the const.py and access rights of the repo.
 import os
 from pathlib import Path
 
-repo_name = "bgp_test"
+repo_name = "BGProbe"
 
 def get_repo_root() -> str:
     """
     Call in any place inside the repo,
-    and return the absolute path of `.../bgp_test/`
+    and return the absolute path of `.../BGProbe/`
     """
     current_dir = os.path.dirname(os.path.abspath(__file__))
     while True:

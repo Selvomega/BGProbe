@@ -97,3 +97,20 @@ def mrt_to_binary(file_path) -> bytes:
     with open(file_path, 'rb') as file:
         file_bytes = file.read()
     return file_bytes
+
+def hexstr2bytes(hex_str: str) -> bytes:
+    """
+    Convert the hexadecimal string into bytes.
+    """
+    # Remove possible spaces and line breaks
+    hex_str = hex_str.strip().replace(" ", "")
+    # Make sure the length of the string is even
+    if len(hex_str) % 2 != 0:
+        raise ValueError("The length of the hexadecimal string must be even!")
+    return bytes.fromhex(hex_str)
+
+def bytes2hexstr(data: bytes) -> str:
+    """
+    Convert bytes into hexadecimal string.
+    """
+    return data.hex()

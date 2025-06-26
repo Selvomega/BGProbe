@@ -1,6 +1,7 @@
 gcloud/*
 playground/*
 log/*
+data/*
 
 **/__pycache__/
 **/__pycache__/*

@@ -202,11 +202,11 @@ class ExaBGPLogEngine:
             return "invalid" in log.lower() or "error" in log.lower()
 
 if __name__ == "__main__":
-    path = "/home/xinpeilin/bgp_test/log/test_single/testcase-29_2025-05-19_15-38-17/messages.mrt"
-    path = "/home/xinpeilin/bgp_test/log/test_single/testcase-2_2025-05-11_16-56-00/messages.mrt"
-    path = "/home/xinpeilin/bgp_test/log/test_single/testcase-20_2025-05-13_14-14-31/messages.mrt"
-    path = "/home/xinpeilin/bgp_test/log/test_single/testcase-20_2025-05-13_14-14-31/exabgp.log"
-    # path = "/home/xinpeilin/bgp_test/log/test_single/testcase-2_2025-05-19_21-18-27/exabgp.log"
+    path = "/home/xinpeilin/BGProbe/data/test_single/testcase-29_2025-05-19_15-38-17/messages.mrt"
+    path = "/home/xinpeilin/BGProbe/data/test_single/testcase-2_2025-05-11_16-56-00/messages.mrt"
+    path = "/home/xinpeilin/BGProbe/data/test_single/testcase-20_2025-05-13_14-14-31/messages.mrt"
+    path = "/home/xinpeilin/BGProbe/data/test_single/testcase-20_2025-05-13_14-14-31/exabgp.log"
+    # path = "/home/xinpeilin/BGProbe/data/test_single/testcase-2_2025-05-19_21-18-27/exabgp.log"
 
     # ret = read_mrt(path)
     # for item in ret:

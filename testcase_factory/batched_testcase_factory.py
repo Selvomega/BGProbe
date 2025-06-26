@@ -5,20 +5,19 @@ import sys, os, subprocess, random
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from basic_utils.time_utils import get_current_time
 from basic_utils.file_utils import *
-from bgp_utils.message import OpenMessage_BFN, OpenMessage, KeepAliveMessage_BFN, KeepAliveMessage, UpdateMessageContent_BFN, UpdateMessage_BFN, UpdateMessage, WithdrawnRoutes_BFN, NLRI_BFN, PathAttributes_BFN
-from bgp_utils.path_attribute import AttrType_BFN, BaseAttr_BFN, OriginType, Origin_BFN, OriginAttr_BFN, PathSegementType, PathSegmentType_BFN, PathSegmentLength_BFN, PathSegmentValue_BFN, PathSegment_BFN, ASPath_BFN, ASPathAttr_BFN, NextHop_BFN, NextHopAttr_BFN, Communities_BFN, CommunitiesAttr_BFN, MPReachNLRI_BFN, MPReachNLRIAttr_BFN, MPUnreachNLRI_BFN, MPUnreachNLRIAttr_BFN, LOCPREF_BFN, LOCPREFAttr_BFN, Arbitrary_BFN, ArbitraryAttr_BFN
-from bgp_utils.basic_bfn_types import IPv4Prefix_BFN, Length_BFN
-from bgp_utils.binary_field_node import BinaryFieldNode
-from basic_utils.binary_utils import bytes2num
-from basic_utils.log_parse_utils import MrtparseEngine, ExaBGPLogEngine
-from test_agent.test_suite import TestCase, Halt, TestSuite
-from test_agent.test_agent import *
+from basic_utils.const import *
+from basic_utils.serialize_utils import *
 
-from test_configuration import *
+from bgp_toolkit.message import OpenMessage_BFN, OpenMessage, KeepAliveMessage_BFN, KeepAliveMessage, UpdateMessageContent_BFN, UpdateMessage_BFN, UpdateMessage, WithdrawnRoutes_BFN, NLRI_BFN, PathAttributes_BFN
+from bgp_toolkit.path_attribute import AttrType_BFN, BaseAttr_BFN, OriginType, Origin_BFN, OriginAttr_BFN, PathSegementType, PathSegmentType_BFN, PathSegmentLength_BFN, PathSegmentValue_BFN, PathSegment_BFN, ASPath_BFN, ASPathAttr_BFN, NextHop_BFN, NextHopAttr_BFN, Communities_BFN, CommunitiesAttr_BFN, MPReachNLRI_BFN, MPReachNLRIAttr_BFN, MPUnreachNLRI_BFN, MPUnreachNLRIAttr_BFN, LOCPREF_BFN, LOCPREFAttr_BFN, Arbitrary_BFN, ArbitraryAttr_BFN
+from bgp_toolkit.basic_bfn_types import IPv4Prefix_BFN, Length_BFN
+from bgp_toolkit.binary_field_node import BinaryFieldNode
 
-from basic_utils.binary_utils import make_bytes_displayable
+from testcase_factory.basic_types import TestCase, Halt
 
-TEST_BATCH_DIR = f"{REPO_ROOT_PATH}/test_batches"
+from bgprobe_config import *
+
+TEST_BATCH_DIR = f"{REPO_ROOT_PATH}/testcase_factory/batched_testcases"
 
 def probability_true(p) -> bool:
     """
@@ -41,8 +40,8 @@ vanilla_keepalive_message = KeepAliveMessage(keepalive_message_bfn)
 ############### Vanilla path attributes ###############
 
 vanilla_attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
-vanilla_attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
-vanilla_attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+vanilla_attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_agent_asn]))
+vanilla_attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_agent_ip))
 
 ############### Define some constant prefixes ###############
 
@@ -132,8 +131,8 @@ def random_descendent_bfn():
     Randomly mutate one BFN under the UPDATE message
     """
     attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
-    attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
-    attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+    attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_agent_asn]))
+    attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_agent_ip))
     attr_arbitrary = ArbitraryAttr_BFN(
         attr_type_bfn=AttrType_BFN.get_bfn(
             type_code=114, # An unknown type
@@ -164,8 +163,8 @@ def random_length_bfn():
     Randomly mutate one Length_BFN under the UPDATE message by modifying its value randomly.
     """
     attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
-    attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
-    attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+    attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_agent_asn]))
+    attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_agent_ip))
     attr_arbitrary = ArbitraryAttr_BFN(
         attr_type_bfn=AttrType_BFN.get_bfn(
             type_code=114, # An unknown type
@@ -201,8 +200,8 @@ def random_attribute_bfn():
     Randomly mutate one attribute BFN under the UPDATE message.
     """
     attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
-    attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_client_asn]))
-    attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_client_ip))
+    attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_agent_asn]))
+    attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_agent_ip))
     attr_arbitrary = ArbitraryAttr_BFN(
         attr_type_bfn=AttrType_BFN.get_bfn(
             type_code=114, # An unknown type
@@ -225,7 +224,7 @@ def random_attribute_bfn():
     sampled_attr = update_message_bfn.sample_under_cone(
         BinaryFieldNode.is_attr_bfn
     )
-    print(sampled_attr.get_bfn_name())
+    # print(sampled_attr.get_bfn_name())
     # Randomly mutate one field in the attribute.
     sampled_attr.sample_under_cone(
         BinaryFieldNode.is_bfn
@@ -240,9 +239,9 @@ if __name__ == "__main__":
     Generate the test batch
     """
 
-    gen_func = random_attribute_bfn
-    testcase_num = 512
-    test_batch_name = "random_attribute_bfn"
+    gen_func = random_unknown_attribute
+    testcase_num = 1024
+    test_batch_name = "random_unknown_attribute"
     include_timestamp = False
 
     generate_test_batch(
