@@ -5,6 +5,7 @@ TESTCASE_DUMP_SINGLE = 'data/test_single'
 TESTCASE_DUMP_BATCHED = 'data/test_batched'
 TESTCASE_DUMP_CRASHED = 'data/test_crashed'
 TESTCASE_DUMP_REPEATED = 'data/test_repeated'
+TESTCASE_DUMP_PLAYGROUND = 'data/test_playground'
 
 def directory_exists(dir_path: str) -> bool:
     """Check if the directory exists."""

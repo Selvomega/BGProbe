@@ -43,9 +43,9 @@ def main(test_id: int, test_name: str = None):
 
     testcase = single_testcase_suite[test_id]
 
-    ########## Initialize the TestAgent ##########
+    ########## Initialize the Testbed ##########
 
-    test_agent = Testbed(
+    testbed = Testbed(
         tcp_agent_config = tcp_agent_config,
         router_agent_config = router_agent_config,
         exabgp_agent_config = exabgp_agent_config,
@@ -56,7 +56,7 @@ def main(test_id: int, test_name: str = None):
     if test_name is None:
         test_name = f"testcase-{test_id}"
 
-    test_agent.run_test_single(
+    testbed.run_test_single(
         testcase=testcase,
         test_name=test_name,
     )
@@ -69,7 +69,7 @@ def main(test_id: int, test_name: str = None):
 
 if __name__ == "__main__":
     # Create the arg parser. 
-    parser = argparse.ArgumentParser(description="Deal with the testcase id")
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "--number", "-n",
         type=int, 

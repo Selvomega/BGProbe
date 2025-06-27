@@ -48,7 +48,7 @@ def main(test_batch_name: str, test_name: str = None):
         router_type=router_type
     )
 
-    ########## Initialize the TestAgent ##########
+    ########## Initialize the Testbed ##########
 
     testbed = Testbed(
         tcp_agent_config = tcp_agent_config,
@@ -68,7 +68,7 @@ def main(test_batch_name: str, test_name: str = None):
 
 if __name__ == "__main__":
     # Create the arg parser. 
-    parser = argparse.ArgumentParser(description="Deal with the testcase id")
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "--name", "-n",
         required=True,

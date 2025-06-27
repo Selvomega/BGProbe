@@ -242,7 +242,7 @@ protocol bgp peer{peer_count} {{
         while self.config_in_progress():
             sleep(0.1)
             counter = counter + 1
-            if counter>50:
+            if counter>40:
                 print("BIRD routing daemon configure for too long! Regard as a failure.")
                 os.system("sudo kill -9 $(pidof bird)")
                 return

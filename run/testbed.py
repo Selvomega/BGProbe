@@ -17,6 +17,7 @@ from testcase_factory.basic_types import Halt, TestCase
 from test_agents.tcp_agent import TCPAgent, TCPAgentConfiguration
 from test_agents.router_agent import RouterAgentConfiguration, FRRRouterAgent, BIRDRouterAgent, get_router_agent
 from test_agents.exabgp_agent import ExaBGPAgent, ExaBGPAgentConfiguration
+from subprocess import CalledProcessError
 
 MESSAGE_MRT_FILE = "messages.mrt"
 ROUTE_MRT_FILE = "routes.mrt"
@@ -79,6 +80,10 @@ class Testbed:
 
         """
 
+        ########## Allow user to access the dumped directory ##########
+
+        allow_user_access(dump_path)
+
         ########## Initialize the routing software interface. ##########
 
         self.router_agent.clear_log() 
@@ -95,16 +100,15 @@ class Testbed:
             if self.router_agent.if_crashed():
                 print("Software crashed!")
                 # Save the router configuration and the testcase to a special folder.
-                self.save_crash_setting(router_config=self.router_agent_config,
-                                        test_case=testcase,
+                self.save_crash_setting(router_agent_config=self.router_agent_config,
+                                        testcase=testcase,
                                         name=testcase_id)
                 # Mark the testcase has crashed
                 create_file(f"{dump_path}/{CRASH_MARKER_FILE}", "1")
             # Clear the test pipeline 
             self.tcp_agent.end()
-            self.router_agent.wait_for_log() # Shut down the clients one by one.
             self.exabgp_agent.end()
-            self.router_agent.end_bgp_instance()
+            self.router_agent.restart_software()
 
         ########## Start the routing software instance and clients ##########
 
@@ -155,35 +159,6 @@ class Testbed:
         create_file(f"{dump_path}/{BGPD_LOG_FILE}", bgpd_log_content)
         create_file(f"{dump_path}/{EXABGP_LOG_FILE}", exabgp_log_content)
 
-        ########## Dumping RIB ##########
-
-        # Dumping RIB here, different behaviors for different BGP softwares
-        if isinstance(self.router_agent, FRRRouterAgent):
-            # For FRRouting bgpd, dumping RIB is like taking a snapshot.
-            self.router_agent.dump_routing_table(f"{dump_path}/{ROUTE_MRT_FILE}")
-            # Sleep for a while to wait for the dumping
-            sleep(1.5)
-        elif isinstance(self.router_agent, BIRDRouterAgent):
-            # For BIRD bgpd, dumping is periodic, we set the period as 1 second.
-            self.router_agent.dump_routing_table(f"{dump_path}/{ROUTE_MRT_FILE}")
-            # So we need to sleep longer
-            sleep(2)
-        else:
-            # This should not happen...
-            raise ValueError("Unexpected type of the router interface!")
-
-        ########## Stop MRT dumping ##########
-
-        if isinstance(self.router_agent, FRRRouterAgent):
-            self.router_agent.stop_dump_updates()
-            self.router_agent.stop_dump_routing_table()
-        elif isinstance(self.router_agent, BIRDRouterAgent):
-            self.router_agent.stop_dump_messages()
-            self.router_agent.stop_dump_routing_table()
-        else:
-            # This should not happen...
-            raise ValueError("Unexpected type of the router interface!")
-
         ########## Dump the testcase settings ##########
 
         save_variable_to_file(self.router_agent_config, 
@@ -195,15 +170,45 @@ class Testbed:
         create_file(f"{dump_path}/{TESTCASE_TXT_FILE}",
                     testcase.get_string_expression())
 
+        try:
+
+            ########## Dumping RIB ##########
+
+            # Dumping RIB here, different behaviors for different BGP softwares
+            if isinstance(self.router_agent, FRRRouterAgent):
+                # For FRRouting bgpd, dumping RIB is like taking a snapshot.
+                self.router_agent.dump_routing_table(f"{dump_path}/{ROUTE_MRT_FILE}")
+                # Sleep for a while to wait for the dumping
+                sleep(1.5)
+            elif isinstance(self.router_agent, BIRDRouterAgent):
+                # For BIRD bgpd, dumping is periodic, we set the period as 1 second.
+                self.router_agent.dump_routing_table(f"{dump_path}/{ROUTE_MRT_FILE}")
+                # So we need to sleep longer
+                sleep(2)
+            else:
+                # This should not happen...
+                raise ValueError("Unexpected type of the router interface!")
+
+            ########## Stop MRT dumping ##########
+
+            if isinstance(self.router_agent, FRRRouterAgent):
+                self.router_agent.stop_dump_updates()
+                self.router_agent.stop_dump_routing_table()
+            elif isinstance(self.router_agent, BIRDRouterAgent):
+                self.router_agent.stop_dump_messages()
+                self.router_agent.stop_dump_routing_table()
+            else:
+                # This should not happen...
+                raise ValueError("Unexpected type of the router interface!")
+            
+        except CalledProcessError: 
+            pass
+
         ########## Deal with software crashes ##########
 
         if self.router_agent.if_crashed():
             crash_handling()
             return
-        
-        ########## Allow user to access the dumped directory ##########
-
-        allow_user_access(dump_path)
         
         ########## Clear the test pipeline ##########
                 
@@ -315,6 +320,33 @@ class Testbed:
                 # `testcase_id` is defined here
                 testcase_id=f"{test_name_with_time}_execution-{i+1}"
             )
+    
+    def run_test_playground(self,
+                            testcase: TestCase,
+                            test_name: str):
+        """
+        Run a testcase in the playground.
+
+        `test_name`: The name of the test.
+        """
+
+        ########## Prepare the directory for dumping ##########
+
+        # Since this is about a single test, `testcase_id` can be derived directly from the `test_name`.
+        testcase_id = f"{test_name}_{get_current_time()}"
+        dump_path = f"{REPO_ROOT_PATH}/{TESTCASE_DUMP_PLAYGROUND}/{testcase_id}"
+        assert not directory_exists(dump_path)
+        create_dir(dump_path)
+
+        allow_user_access(dump_path)
+
+        ########## Run the test ##########
+
+        self.single_test_inner(
+            testcase=testcase,
+            dump_path=dump_path,
+            testcase_id=testcase_id,
+        )
 
     def save_crash_setting(self,
                            router_agent_config: RouterAgentConfiguration,

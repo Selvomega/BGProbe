@@ -43,9 +43,9 @@ def main(test_id: int, repeat_num: int, test_name: str = None):
 
     testcase, testcase_name = repeated_testcase_suite[test_id]
 
-    ########## Initialize the TestAgent ##########
+    ########## Initialize the Testbed ##########
 
-    test_agent = Testbed(
+    testbed = Testbed(
         tcp_agent_config = tcp_agent_config,
         router_agent_config = router_agent_config,
         exabgp_agent_config = exabgp_agent_config,
@@ -56,7 +56,7 @@ def main(test_id: int, repeat_num: int, test_name: str = None):
     if test_name is None:
         test_name = testcase_name
 
-    test_agent.run_test_repeated(
+    testbed.run_test_repeated(
         test_name=test_name,
         testcase=testcase,
         repeated_num=repeat_num,
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         if ivalue < 0:
             raise argparse.ArgumentTypeError(f"{value} is an invalid non-negative int value")
         return ivalue
-    parser = argparse.ArgumentParser(description="Deal with the testcase id")
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "--number", "-n",
         type=int, 

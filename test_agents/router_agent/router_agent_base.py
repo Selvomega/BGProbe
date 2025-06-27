@@ -96,6 +96,13 @@ class BaseRouterAgent(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
+    def restart_software(self):
+        """
+        Restart the software.
+        """
+        raise NotImplementedError()
+
     ########## Other utils ##########
 
     @abstractmethod
