@@ -9,6 +9,7 @@ data/*
 
 test.py
 draft.py
+draft2.txt
 observe.txt
 temp.pkl
 nohup.log

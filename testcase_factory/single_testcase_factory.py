@@ -1662,6 +1662,47 @@ update_message = UpdateMessage(update_message_bfn)
 # testcase
 testcase_56 = TestCase([open_message, keepalive_message, update_message])
 
+############### testcase 57 ###############
+
+"""Testcase: Using MP_UNREACH_NLRI to withdraw."""
+
+# Vanilla OPEN and KEEPALIVE message
+open_message = deepcopy(vanilla_open_message)
+keepalive_message = deepcopy(vanilla_keepalive_message)
+
+# UPDATE message 1
+update_message_bfn_1 = UpdateMessage_BFN.get_bfn(
+    withdrawn_routes=[],
+    aspath=[tester_agent_asn],
+    next_hop=tester_agent_ip,
+    nlri=["59.66.130.0/24"]
+)
+
+attr_origin = OriginAttr_BFN(Origin_BFN(OriginType.IGP))
+attr_aspath = ASPathAttr_BFN(ASPath_BFN.get_bfn(as_path=[tester_agent_asn]))
+attr_nexthop = NextHopAttr_BFN(NextHop_BFN(tester_agent_ip))
+attr_mp_unreach_nlri = MPUnreachNLRIAttr_BFN.get_ipv4_unicast_bfn(
+    mp_wroutes=["59.66.130.0/24"]
+)
+# UPDATE message 2
+update_message_bfn_2 = UpdateMessage_BFN.get_bfn_diy_attr(
+    withdrawn_routes=[],
+    nlri=[],
+    attr_bfn_list=[
+        attr_origin,
+        attr_aspath,
+        attr_nexthop,
+        attr_mp_unreach_nlri,
+    ]
+)
+update_message_1 = UpdateMessage(update_message_bfn_1)
+update_message_2 = UpdateMessage(update_message_bfn_2)
+
+# testcase
+testcase_57 = TestCase(
+    [open_message, keepalive_message, update_message_1, Halt(), update_message_2]
+)
+
 ##############################################
 #               Testcase Suite               #
 ##############################################
@@ -1724,4 +1765,5 @@ single_testcase_suite = [
     testcase_54,
     testcase_55,
     testcase_56,
+    testcase_57,
 ]

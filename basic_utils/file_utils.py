@@ -1,11 +1,12 @@
 from .const import USER_NAME
-import os
+import os, re
 
 TESTCASE_DUMP_SINGLE = 'data/test_single'
 TESTCASE_DUMP_BATCHED = 'data/test_batched'
 TESTCASE_DUMP_CRASHED = 'data/test_crashed'
 TESTCASE_DUMP_REPEATED = 'data/test_repeated'
 TESTCASE_DUMP_PLAYGROUND = 'data/test_playground'
+ANALYZED_DUMP = 'data/analyzed'
 
 def directory_exists(dir_path: str) -> bool:
     """Check if the directory exists."""
@@ -41,3 +42,16 @@ def allow_user_access(path: str):
     """
     os.system(f"sudo setfacl -R -m u:{USER_NAME}:rwx {path}")
     os.system(f"sudo setfacl -d -R -m u:{USER_NAME}:rwx {path}")
+
+def read_file(path: str):
+    """
+    Read (all) the content from the file.
+    Must execute with sudo-command.
+    """
+    with open(path, 'r') as file:
+        content = file.read()
+    return content
+
+def natural_key(s):
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(r'(\d+)', s)]
