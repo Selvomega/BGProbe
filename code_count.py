@@ -31,5 +31,5 @@ def count_total_code_lines(root='.'):
     return total
 
 if __name__ == '__main__':
-    total_lines = count_total_code_lines('data_analyzer')
+    total_lines = count_total_code_lines('.')
     print(f'有效 Python 代码行数：{total_lines}')
