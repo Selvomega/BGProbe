@@ -12,6 +12,7 @@ class RouterAgentType(Enum):
     FRR = 1
     BIRD = 2
     GOBGP = 3
+    OPENBGPD = 4
 
 @dataclass
 class Neighbor:

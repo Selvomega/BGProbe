@@ -11,7 +11,7 @@ from network_utils.utils import get_ipv4_prefix_parts
 
 ############### Define the type of the routing software ###############
 
-router_type = RouterAgentType.GOBGP
+router_type = RouterAgentType.OPENBGPD
 
 ############### Load configurations from files ###############
 

@@ -58,7 +58,7 @@ class GoBGPRouterAgent(BaseRouterAgent):
             neighbor_conf_list.append(neighbor_conf)
         overall_conf = global_conf + "".join(neighbor_conf_list)
         
-        # Remove the old config file
+        # Remove the old log file
         delete_file(GOBGP_LOG)
         # Clear the old gobgpd process
         os.system("sudo pkill gobgp")

@@ -2,6 +2,7 @@ from .router_agent_base import BaseRouterAgent
 from .router_agent_frr import FRRRouterAgent
 from .router_agent_bird import BIRDRouterAgent
 from .router_agent_gobgp import GoBGPRouterAgent
+from .router_agent_openbgpd import OpenBGPDRouterAgent
 from .basic_types import RouterAgentType, RouterAgentConfiguration
 
 def get_router_agent(router_agent_config : RouterAgentConfiguration) -> BaseRouterAgent:
@@ -16,5 +17,7 @@ def get_router_agent(router_agent_config : RouterAgentConfiguration) -> BaseRout
             return BIRDRouterAgent(router_agent_config)
         case RouterAgentType.GOBGP:
             return GoBGPRouterAgent(router_agent_config)
+        case RouterAgentType.OPENBGPD:
+            return OpenBGPDRouterAgent(router_agent_config)
         case _:
             raise ValueError(f"Router type {router_type} undefined!")
