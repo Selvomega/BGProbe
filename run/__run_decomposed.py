@@ -9,8 +9,6 @@ from time import sleep
 from bgp_toolkit.message import OpenMessage_BFN, OpenMessage, KeepAliveMessage_BFN, KeepAliveMessage, UpdateMessage_BFN, UpdateMessage
 
 from network_utils.tcp_client import TCPClientConfiguration, TCPClient
-from routing_software_interface.basic_types import RouterConfiguration, RouterSoftwareType, Neighbor
-from routing_software_interface.utils import get_router_interface
 from basic_utils.binary_utils import make_bytes_displayable
 
 from testcase_factory.single_testcase_factory import VNET_CONFIG, BGP_CONFIG
@@ -58,5 +56,5 @@ for message in testcase:
     tcp_client.send(message.get_binary_expression())
     print("EEEE")
     sleep(0.5)
-sleep(40)
+sleep(130)
 tcp_client.end()

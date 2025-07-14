@@ -11,6 +11,7 @@ class RouterAgentType(Enum):
     UNDEFINED = -1
     FRR = 1
     BIRD = 2
+    GOBGP = 3
 
 @dataclass
 class Neighbor:

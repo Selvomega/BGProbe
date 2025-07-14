@@ -52,6 +52,15 @@ def read_file(path: str):
         content = file.read()
     return content
 
+def clear_file(path: str):
+    """
+    Clear the file.
+    Must execute with sudo-command.
+    """
+    with open(path, 'w') as file:
+        file.write('')
+    return
+
 def natural_key(s):
     return [int(text) if text.isdigit() else text.lower()
             for text in re.split(r'(\d+)', s)]

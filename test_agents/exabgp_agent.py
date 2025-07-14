@@ -118,7 +118,7 @@ class ExaBGPAgent:
 
         os.system(f"sudo rm {EXA_BGP_LOG}")
         process = subprocess.Popen(
-            f"sudo ip netns exec {self.configuration.namespace} env PYTHONPATH={site_package_path} {exabgp_path} config/exabgp.conf --debug > {EXA_BGP_LOG}",
+            f"sudo ip netns exec {self.configuration.namespace} env PYTHONPATH={site_package_path} {exabgp_path} {REPO_ROOT_PATH}/config/exabgp.conf --debug > {EXA_BGP_LOG}",
             shell=True,
             stdout=subprocess.PIPE,
             preexec_fn=os.setsid

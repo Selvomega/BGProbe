@@ -4,6 +4,7 @@ The FRR router.
 
 from .basic_types import *
 from .router_agent_base import BaseRouterAgent
+from basic_utils.file_utils import read_file, clear_file
 from time import sleep
 import subprocess
 
@@ -139,14 +140,14 @@ class FRRRouterAgent(BaseRouterAgent):
         Read (all) the content from the routing softwares' log.
         Must execute with sudo-command.
         """
-        return super().read_log(FRR_LOG)
+        return read_file(FRR_LOG)
 
     def clear_log(self):
         """
         Clear the content from the routing softwares' log.
         Must execute with sudo-command.
         """
-        super().clear_log(FRR_LOG)
+        clear_file(FRR_LOG)
 
     ########## Crash management ##########
 
@@ -179,25 +180,7 @@ class FRRRouterAgent(BaseRouterAgent):
         os.system("sudo systemctl restart frr")
         sleep(1)
 
-    ########## Other utils ##########
-
-    def wait_for_log(self, time_duration: float = 0.1):
-        """
-        Waiting until the log does not update anymore.
-        """
-        no_updates = False
-        prev_content = None
-        while not no_updates:
-            cur_content = self.read_log()
-            no_updates = prev_content==cur_content
-            prev_content = cur_content
-            sleep(time_duration) # Sleep for 0.1 second
-
-            # if not no_updates:
-            #     print("For debug")
-            #     print(f"Previous content:\n{prev_content}\nCurrent content:\n{cur_content}")
-
-    
+   
     ########## Modification, derpecated ##########
 
     # def append_local_prefix(self, prefix):

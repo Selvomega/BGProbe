@@ -3,6 +3,7 @@ The basic type of the router agent.
 """
 
 from abc import ABC, abstractmethod
+from time import sleep
 from .basic_types import *
 
 class BaseRouterAgent(ABC):
@@ -60,14 +61,12 @@ class BaseRouterAgent(ABC):
     ########## Log manipulation ##########
 
     @abstractmethod
-    def read_log(self, path: str):
+    def read_log(self):
         """
         Read (all) the content from the routing softwares' log.
         Must execute with sudo-command.
         """
-        with open(path, 'r') as file:
-            content = file.read()
-        return content
+        raise NotImplementedError("`restart_bgp_instance` not implemented!")
 
     @abstractmethod
     def clear_log(self, path: str):
@@ -75,9 +74,7 @@ class BaseRouterAgent(ABC):
         Clear the content from the routing softwares' log.
         Must execute with sudo-command.
         """
-        with open(path, 'w') as file:
-            file.write('')
-        return
+        raise NotImplementedError("`restart_bgp_instance` not implemented!")
 
     ########## Crash management ##########
 
@@ -105,9 +102,14 @@ class BaseRouterAgent(ABC):
 
     ########## Other utils ##########
 
-    @abstractmethod
-    def wait_for_log(self, time_duration: float):
+    def wait_for_log(self, time_duration: float = 0.1):
         """
         Waiting until the log does not update anymore.
         """
-        raise NotImplementedError()
+        no_updates = False
+        prev_content = None
+        while not no_updates:
+            cur_content = self.read_log()
+            no_updates = prev_content==cur_content
+            prev_content = cur_content
+            sleep(time_duration)

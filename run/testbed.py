@@ -15,7 +15,7 @@ from basic_utils.file_utils import *
 from basic_utils.const import *
 from testcase_factory.basic_types import Halt, TestCase
 from test_agents.tcp_agent import TCPAgent, TCPAgentConfiguration
-from test_agents.router_agent import RouterAgentConfiguration, FRRRouterAgent, BIRDRouterAgent, get_router_agent
+from test_agents.router_agent import RouterAgentConfiguration, FRRRouterAgent, BIRDRouterAgent, GoBGPRouterAgent, get_router_agent
 from test_agents.exabgp_agent import ExaBGPAgent, ExaBGPAgentConfiguration
 from subprocess import CalledProcessError
 
@@ -108,10 +108,14 @@ class Testbed:
             # Clear the test pipeline 
             self.tcp_agent.end()
             self.exabgp_agent.end()
+            self.router_agent.end_bgp_instance()
             self.router_agent.restart_software()
 
         ########## Start the routing software instance and clients ##########
 
+        if isinstance(self.router_agent, GoBGPRouterAgent):
+            self.router_agent.message_mrt_dump_config(f"{dump_path}/{MESSAGE_MRT_FILE}")
+            self.router_agent.route_mrt_dump_config(f"{dump_path}/{ROUTE_MRT_FILE}")
         self.router_agent.start_bgp_instance()
         self.router_agent.wait_for_log() # Start the clients one by one.
         self.exabgp_agent.start()
@@ -127,6 +131,9 @@ class Testbed:
         elif isinstance(self.router_agent, BIRDRouterAgent):
             # For BIRD bgpd, we start to dump ALL BGP messages here.
             self.router_agent.dump_messages(f"{dump_path}/{MESSAGE_MRT_FILE}")
+        elif isinstance(self.router_agent, GoBGPRouterAgent):
+            # The MRT file dumping of GoBGPRouterAgent is set in the config file.
+            pass
         else:
             # This should not happen...
             raise ValueError("Unexpected type of the router interface!")
@@ -185,6 +192,9 @@ class Testbed:
                 self.router_agent.dump_routing_table(f"{dump_path}/{ROUTE_MRT_FILE}")
                 # So we need to sleep longer
                 sleep(2)
+            elif isinstance(self.router_agent, GoBGPRouterAgent):
+                # The MRT file dumping of GoBGPRouterAgent is set in the config file.
+                sleep(1)
             else:
                 # This should not happen...
                 raise ValueError("Unexpected type of the router interface!")
@@ -197,6 +207,8 @@ class Testbed:
             elif isinstance(self.router_agent, BIRDRouterAgent):
                 self.router_agent.stop_dump_messages()
                 self.router_agent.stop_dump_routing_table()
+            elif isinstance(self.router_agent, GoBGPRouterAgent):
+                pass
             else:
                 # This should not happen...
                 raise ValueError("Unexpected type of the router interface!")
@@ -215,6 +227,7 @@ class Testbed:
         self.tcp_agent.end()
         self.router_agent.wait_for_log() # Shut down the clients one by one.
         self.exabgp_agent.end()
+        self.router_agent.end_bgp_instance()
         self.router_agent.restart_software()
 
 
