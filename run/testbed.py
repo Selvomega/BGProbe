@@ -17,6 +17,7 @@ from testcase_factory.basic_types import Halt, TestCase
 from test_agents.tcp_agent import TCPAgent, TCPAgentConfiguration
 from test_agents.router_agent import RouterAgentConfiguration, FRRRouterAgent, BIRDRouterAgent, GoBGPRouterAgent, OpenBGPDRouterAgent, get_router_agent
 from test_agents.exabgp_agent import ExaBGPAgent, ExaBGPAgentConfiguration
+from testcase_factory.single_testcase_factory import single_testcase_suite
 from subprocess import CalledProcessError
 
 MESSAGE_MRT_FILE = "messages.mrt"
@@ -267,6 +268,43 @@ class Testbed:
             dump_path=dump_path,
             testcase_id=testcase_id,
         )
+    
+    def run_test_single_all(self,
+                            test_name: str):
+        """
+        Run all single testcases.
+
+        `test_name`: The name of the test.
+        """
+
+        ########## Prepare the directory for dumping ##########
+
+        test_name_with_time = f"{test_name}_{get_current_time()}"
+
+        dump_dir_path = f"{REPO_ROOT_PATH}/{TESTCASE_DUMP_SINGLE}/{test_name_with_time}"
+        assert not directory_exists(dump_dir_path)
+        create_dir(dump_dir_path)
+
+        allow_user_access(dump_dir_path)
+
+        ########## Enumerate the testcases ##########
+
+        # First retrieve the testcases.
+        testcase_list = single_testcase_suite
+        for i in range(2,len(testcase_list)):
+
+            print(f"======= Running testcase {i} =======")
+
+            testcase_dump_dir_path = f"{dump_dir_path}/testcase_{i}"
+            create_dir(testcase_dump_dir_path)
+            testcase = testcase_list[i]
+
+            self.single_test_inner(
+                testcase=testcase,
+                dump_path=testcase_dump_dir_path,
+                # `testcase_id` is defined here
+                testcase_id=f"{test_name_with_time}_testcase-{i}"
+            )
 
     def run_test_batch(self, 
                        test_batch_name: str,

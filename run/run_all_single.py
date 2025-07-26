@@ -39,34 +39,22 @@ def main(test_name: str = None):
         router_type=router_type
     )
 
-    ########## Load the Testcase ##########
+    ########## Initialize the Testbed ##########
 
-    for test_id in range(2, len(single_testcase_suite)):
+    testbed = Testbed(
+        tcp_agent_config = tcp_agent_config,
+        router_agent_config = router_agent_config,
+        exabgp_agent_config = exabgp_agent_config,
+    )
 
-        testcase = single_testcase_suite[test_id]
+    ########## Run all single testcases ##########
 
-        ########## Initialize the Testbed ##########
+    if test_name is None:
+        test_name = "all_single_testcases"
 
-        testbed = Testbed(
-            tcp_agent_config = tcp_agent_config,
-            router_agent_config = router_agent_config,
-            exabgp_agent_config = exabgp_agent_config,
-        )
-
-        ########## Run testcase ##########
-
-        test_name = f"testcase-{test_id}"
-
-        testbed.run_test_single(
-            testcase=testcase,
-            test_name=test_name,
-        )
-
-        ########## Debug testcase ##########
-
-        # update_msg = testcase[-1]
-        # print(make_bytes_displayable(update_msg.get_binary_expression()))
-
+    testbed.run_test_single_all(
+        test_name = test_name,
+    )
 
 if __name__ == "__main__":
     # Create the arg parser. 
