@@ -192,8 +192,7 @@ class Testbed:
             if isinstance(self.router_agent, FRRRouterAgent):
                 # For FRRouting bgpd, dumping RIB is like taking a snapshot.
                 self.router_agent.dump_routing_table(f"{dump_path}/{ROUTE_MRT_FILE}")
-                # Sleep for a while to wait for the dumping
-                sleep(1.5)
+                # No need to sleep here since it is done in `dump_routing_table`
             elif isinstance(self.router_agent, BIRDRouterAgent):
                 # For BIRD bgpd, dumping is periodic, we set the period as 1 second.
                 self.router_agent.dump_routing_table(f"{dump_path}/{ROUTE_MRT_FILE}")

@@ -6,7 +6,7 @@ from .basic_types import *
 from .router_agent_base import BaseRouterAgent
 from basic_utils.file_utils import read_file, clear_file
 from time import sleep
-import subprocess
+import subprocess, os, time
 
 FRR_LOG = "/var/log/frr/bgpd.log"
 
@@ -115,11 +115,36 @@ class FRRRouterAgent(BaseRouterAgent):
         """
         self.execute_commands_in_config_level([f"dump bgp updates {path}"])
 
+    # Old version of `dump_routing_table`
+    # def dump_routing_table(self, path: str):
+    #     """
+    #     Dump the whole BGP routing table to `path`.
+    #     """
+    #     self.execute_commands_in_config_level([f"dump bgp routes-mrt {path}"])
+
     def dump_routing_table(self, path: str):
         """
-        Dump the whole BGP routing table to `path`.
+        Dump the whole BGP routing table to `path`, with a 3 second timeout.
+        Timeout if the file size keep growing
         """
         self.execute_commands_in_config_level([f"dump bgp routes-mrt {path}"])
+        sleep(0.1)
+        start_time = time.time()
+        cur_size = 0
+        prev_size = 0
+        still_increasing = True
+        while time.time() - start_time < 3:
+            cur_size = os.path.getsize(path)
+            if cur_size != prev_size:
+                sleep(0.1)
+            else:
+                still_increasing = False
+                break
+            prev_size = cur_size
+        if still_increasing:
+            # If the file size keeps increasing
+            os.system("sudo pkill -9 frr")
+            os.system("sudo pkill -9 bgpd")
     
     def stop_dump_updates(self):
         """
@@ -177,8 +202,9 @@ class FRRRouterAgent(BaseRouterAgent):
         """
         Restart the software.
         """
+        os.system("sudo systemctl reset-failed frr.service")
         os.system("sudo systemctl restart frr")
-        sleep(1)
+        sleep(0.5)
 
    
     ########## Modification, derpecated ##########
