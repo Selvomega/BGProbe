@@ -58,6 +58,7 @@ neighbor {neighbor.peer_ip} {{
     announce extended message yes
     local-address           10.0.0.127
     passive
+    set nexthop self
 }}
 """
             neighbor_conf_list.append(neighbor_conf)
