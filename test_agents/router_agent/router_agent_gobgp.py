@@ -40,6 +40,22 @@ class GoBGPRouterAgent(BaseRouterAgent):
 [global.config]
   as = {self.router_agent_configuration.asn}
   router-id = "10.0.0.127"
+  [global.apply-policy.config]
+    import-policy-list = ["only-from-neighbors"]
+    default-import-policy = "reject-route"
+"""
+        only_allow_neighboring_as_policy = f"""
+[[defined-sets.bgp-defined-sets.as-path-sets]]
+  as-path-set-name = "neighboring-as"
+  as-path-list = {["^"+str(neighbor.peer_asn) for neighbor in self.router_agent_configuration.neighbors]}
+
+[[policy-definitions]]
+  name = "only-from-neighbors"
+  [[policy-definitions.statements]]
+    [policy-definitions.statements.conditions.bgp-conditions.match-as-path-set]
+      as-path-set = "neighboring-as"
+    [policy-definitions.statements.actions]
+      route-disposition = "accept-route"
 """
         neighbor_conf_list = []
         for neighbor in self.router_agent_configuration.neighbors:
@@ -56,7 +72,7 @@ class GoBGPRouterAgent(BaseRouterAgent):
     multihop-ttl = 100
 """
             neighbor_conf_list.append(neighbor_conf)
-        overall_conf = global_conf + "".join(neighbor_conf_list)
+        overall_conf = global_conf + only_allow_neighboring_as_policy + "".join(neighbor_conf_list)
         
         # Remove the old log file
         delete_file(GOBGP_LOG)
