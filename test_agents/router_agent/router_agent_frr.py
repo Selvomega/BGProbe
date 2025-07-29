@@ -86,7 +86,8 @@ class FRRRouterAgent(BaseRouterAgent):
             # initialize the BGP neighbors
             command for neighbor in self.router_agent_configuration.neighbors for command in [
                 f"neighbor {neighbor.peer_ip} remote-as {neighbor.peer_asn}",
-                f"neighbor {neighbor.peer_ip} update-source {neighbor.local_source}"
+                f"neighbor {neighbor.peer_ip} update-source {neighbor.local_source}",
+                f"neighbor {neighbor.peer_ip} next-hop-self",
             ]
         ]
         commands = config_debugging_info + config_router_info + config_local_prefix + config_neighbor
